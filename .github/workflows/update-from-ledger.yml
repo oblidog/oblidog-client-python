@@ -50,9 +50,6 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
 
-      - name: Sync dependencies
-        run: uv sync
-
       - name: Download integration OpenAPI schema
         env:
           RELEASE_TAG: ${{ steps.release.outputs.tag }}
@@ -64,7 +61,7 @@ jobs:
 
       - name: Generate client
         run: |
-          uv run openapi-python-client generate \
+          uvx --from openapi-python-client==0.29.0 openapi-python-client generate \
             --path openapi/integration.json \
             --config openapi-client.yaml \
             --meta none \
@@ -73,7 +70,7 @@ jobs:
 
       - name: Validate generated client
         run: |
-          uv run python -m compileall -q src/findog_client/generated
+          python -m compileall -q src/findog_client/generated
           uv build
 
       - name: Create update pull request
@@ -82,7 +79,8 @@ jobs:
           RELEASE_TAG: ${{ steps.release.outputs.tag }}
         shell: bash
         run: |
-          if [[ -z "$(git status --porcelain)" ]]; then
+          changes="$(git status --porcelain -- openapi/integration.json src/findog_client/generated)"
+          if [[ -z "$changes" ]]; then
             echo "No client changes for ${RELEASE_TAG}."
             exit 0
           fi
