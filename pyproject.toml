@@ -26,6 +26,7 @@ packages = ["src/findog_client"]
 [tool.ruff]
 target-version = "py312"
 line-length = 88
+exclude = ["src/findog_client/generated"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
