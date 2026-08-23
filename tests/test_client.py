@@ -4,6 +4,7 @@ import json
 
 import httpx
 import pytest
+
 from findog_client import FindogClient, FindogValidationError, ObligationLifecycle
 from findog_client.generated import errors
 
