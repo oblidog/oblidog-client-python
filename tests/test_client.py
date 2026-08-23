@@ -4,7 +4,6 @@ import json
 
 import httpx
 import pytest
-
 from findog_client import FindogClient, FindogValidationError, ObligationLifecycle
 from findog_client.generated import errors
 
@@ -127,9 +126,11 @@ def test_validation_response_becomes_high_level_exception() -> None:
             },
         )
 
-    with make_client(httpx.MockTransport(handler)) as client:
-        with pytest.raises(FindogValidationError):
-            client.obligations.list(month=13)
+    with (
+        make_client(httpx.MockTransport(handler)) as client,
+        pytest.raises(FindogValidationError),
+    ):
+        client.obligations.list(month=13)
 
 
 def test_undocumented_status_is_not_silently_returned_as_none() -> None:
@@ -137,8 +138,10 @@ def test_undocumented_status_is_not_silently_returned_as_none() -> None:
         assert_auth(request)
         return httpx.Response(500, text="boom")
 
-    with make_client(httpx.MockTransport(handler)) as client:
-        with pytest.raises(errors.UnexpectedStatus) as exc_info:
-            client.obligations.get("energy-2026-08")
+    with (
+        make_client(httpx.MockTransport(handler)) as client,
+        pytest.raises(errors.UnexpectedStatus) as exc_info,
+    ):
+        client.obligations.get("energy-2026-08")
 
     assert exc_info.value.status_code == 500
