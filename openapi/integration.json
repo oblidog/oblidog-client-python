@@ -1,0 +1,1030 @@
+{
+  "components": {
+    "schemas": {
+      "CurrentValueSource": {
+        "enum": [
+          "unknown",
+          "automatic",
+          "manual",
+          "integration",
+          "legacy"
+        ],
+        "title": "CurrentValueSource",
+        "type": "string"
+      },
+      "EffectiveValueSourceMode": {
+        "enum": [
+          "unknown",
+          "automatic",
+          "manual",
+          "integration",
+          "legacy",
+          "mixed"
+        ],
+        "title": "EffectiveValueSourceMode",
+        "type": "string"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "LedgerPublic": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "owner_user_id": {
+            "format": "uuid",
+            "title": "Owner User Id",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "owner_user_id",
+          "name",
+          "description",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "LedgerPublic",
+        "type": "object"
+      },
+      "LedgerUpdate": {
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "name": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "LedgerUpdate",
+        "type": "object"
+      },
+      "ObligationIntegrationUpdate": {
+        "additionalProperties": false,
+        "description": "Values an API-key authenticated integration may update.",
+        "properties": {
+          "current_amount": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Amount"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "issue_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issue Date"
+          }
+        },
+        "title": "ObligationIntegrationUpdate",
+        "type": "object"
+      },
+      "ObligationLifecycle": {
+        "enum": [
+          "draft",
+          "collecting_data",
+          "ready",
+          "paid",
+          "canceled",
+          "error"
+        ],
+        "title": "ObligationLifecycle",
+        "type": "string"
+      },
+      "ObligationNoteAppend": {
+        "additionalProperties": false,
+        "properties": {
+          "text": {
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "ObligationNoteAppend",
+        "type": "object"
+      },
+      "ObligationPeriodPublic": {
+        "properties": {
+          "month": {
+            "maximum": 12.0,
+            "minimum": 1.0,
+            "title": "Month",
+            "type": "integer"
+          },
+          "year": {
+            "maximum": 9999.0,
+            "minimum": 1.0,
+            "title": "Year",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "year",
+          "month"
+        ],
+        "title": "ObligationPeriodPublic",
+        "type": "object"
+      },
+      "ObligationPublic": {
+        "properties": {
+          "amount_source": {
+            "$ref": "#/components/schemas/CurrentValueSource"
+          },
+          "amount_state": {
+            "$ref": "#/components/schemas/ValueState"
+          },
+          "category_code": {
+            "title": "Category Code",
+            "type": "string"
+          },
+          "category_id": {
+            "format": "uuid",
+            "title": "Category Id",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "current_amount": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Amount"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "due_date_source": {
+            "$ref": "#/components/schemas/CurrentValueSource"
+          },
+          "due_date_state": {
+            "$ref": "#/components/schemas/ValueState"
+          },
+          "effective_value_source": {
+            "$ref": "#/components/schemas/EffectiveValueSourceMode"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "issue_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issue Date"
+          },
+          "issue_date_source": {
+            "$ref": "#/components/schemas/CurrentValueSource"
+          },
+          "issue_date_state": {
+            "$ref": "#/components/schemas/ValueState"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "ledger_id": {
+            "format": "uuid",
+            "title": "Ledger Id",
+            "type": "string"
+          },
+          "lifecycle": {
+            "$ref": "#/components/schemas/ObligationLifecycle"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "paid_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid At"
+          },
+          "period": {
+            "$ref": "#/components/schemas/ObligationPeriodPublic"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "ledger_id",
+          "category_id",
+          "category_code",
+          "key",
+          "name",
+          "notes",
+          "lifecycle",
+          "period",
+          "effective_value_source",
+          "current_amount",
+          "amount_state",
+          "amount_source",
+          "issue_date",
+          "issue_date_state",
+          "issue_date_source",
+          "due_date",
+          "due_date_state",
+          "due_date_source",
+          "currency",
+          "paid_at",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ObligationPublic",
+        "type": "object"
+      },
+      "ObligationsPublic": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/ObligationPublic"
+            },
+            "title": "Data",
+            "type": "array"
+          }
+        },
+        "required": [
+          "data",
+          "count"
+        ],
+        "title": "ObligationsPublic",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      },
+      "ValueState": {
+        "enum": [
+          "unknown",
+          "estimated",
+          "confirmed",
+          "overridden"
+        ],
+        "title": "ValueState",
+        "type": "string"
+      }
+    },
+    "securitySchemes": {
+      "IntegrationApiKey": {
+        "description": "A ledger-scoped API key, for example fdg_live_\u2026",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "title": "Findog Integration API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/integration/ledger": {
+      "get": {
+        "description": "Return only the ledger selected by the authenticated API key.",
+        "operationId": "integration-read_integration_ledger",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LedgerPublic"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "IntegrationApiKey": []
+          }
+        ],
+        "summary": "Read Integration Ledger",
+        "tags": [
+          "integration"
+        ]
+      },
+      "patch": {
+        "description": "Update the key's ledger through the shared ledger use case.",
+        "operationId": "integration-update_integration_ledger",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LedgerUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LedgerPublic"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "IntegrationApiKey": []
+          }
+        ],
+        "summary": "Update Integration Ledger",
+        "tags": [
+          "integration"
+        ]
+      }
+    },
+    "/api/v1/integration/obligations": {
+      "get": {
+        "operationId": "integration-read_integration_obligations",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "year",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 9999,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Year"
+            }
+          },
+          {
+            "in": "query",
+            "name": "month",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 12,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Month"
+            }
+          },
+          {
+            "in": "query",
+            "name": "category_code",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^[A-Z]{4}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category Code"
+            }
+          },
+          {
+            "in": "query",
+            "name": "lifecycle",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ObligationLifecycle"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Lifecycle"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObligationsPublic"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "IntegrationApiKey": []
+          }
+        ],
+        "summary": "Read Integration Obligations",
+        "tags": [
+          "integration"
+        ]
+      }
+    },
+    "/api/v1/integration/obligations/{obligation_key}": {
+      "get": {
+        "operationId": "integration-read_integration_obligation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "obligation_key",
+            "required": true,
+            "schema": {
+              "title": "Obligation Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObligationPublic"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "IntegrationApiKey": []
+          }
+        ],
+        "summary": "Read Integration Obligation",
+        "tags": [
+          "integration"
+        ]
+      },
+      "patch": {
+        "operationId": "integration-update_integration_obligation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "obligation_key",
+            "required": true,
+            "schema": {
+              "title": "Obligation Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ObligationIntegrationUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObligationPublic"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "IntegrationApiKey": []
+          }
+        ],
+        "summary": "Update Integration Obligation",
+        "tags": [
+          "integration"
+        ]
+      }
+    },
+    "/api/v1/integration/obligations/{obligation_key}/cancel": {
+      "post": {
+        "operationId": "integration-cancel_integration_obligation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "obligation_key",
+            "required": true,
+            "schema": {
+              "title": "Obligation Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObligationPublic"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "IntegrationApiKey": []
+          }
+        ],
+        "summary": "Cancel Integration Obligation",
+        "tags": [
+          "integration"
+        ]
+      }
+    },
+    "/api/v1/integration/obligations/{obligation_key}/error": {
+      "post": {
+        "operationId": "integration-mark_integration_obligation_error",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "obligation_key",
+            "required": true,
+            "schema": {
+              "title": "Obligation Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObligationPublic"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "IntegrationApiKey": []
+          }
+        ],
+        "summary": "Mark Integration Obligation Error",
+        "tags": [
+          "integration"
+        ]
+      }
+    },
+    "/api/v1/integration/obligations/{obligation_key}/mark-paid": {
+      "post": {
+        "operationId": "integration-mark_integration_obligation_paid",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "obligation_key",
+            "required": true,
+            "schema": {
+              "title": "Obligation Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObligationPublic"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "IntegrationApiKey": []
+          }
+        ],
+        "summary": "Mark Integration Obligation Paid",
+        "tags": [
+          "integration"
+        ]
+      }
+    },
+    "/api/v1/integration/obligations/{obligation_key}/notes": {
+      "post": {
+        "operationId": "integration-append_integration_obligation_note",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "obligation_key",
+            "required": true,
+            "schema": {
+              "title": "Obligation Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ObligationNoteAppend"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObligationPublic"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "IntegrationApiKey": []
+          }
+        ],
+        "summary": "Append Integration Obligation Note",
+        "tags": [
+          "integration"
+        ]
+      }
+    },
+    "/api/v1/integration/obligations/{obligation_key}/ready": {
+      "patch": {
+        "operationId": "integration-mark_integration_obligation_ready",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "obligation_key",
+            "required": true,
+            "schema": {
+              "title": "Obligation Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObligationPublic"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "IntegrationApiKey": []
+          }
+        ],
+        "summary": "Mark Integration Obligation Ready",
+        "tags": [
+          "integration"
+        ]
+      }
+    },
+    "/api/v1/integration/obligations/{obligation_key}/reopen": {
+      "post": {
+        "operationId": "integration-reopen_integration_obligation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "obligation_key",
+            "required": true,
+            "schema": {
+              "title": "Obligation Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObligationPublic"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "IntegrationApiKey": []
+          }
+        ],
+        "summary": "Reopen Integration Obligation",
+        "tags": [
+          "integration"
+        ]
+      }
+    }
+  }
+}
