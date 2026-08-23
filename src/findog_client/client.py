@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import datetime
-from typing import Any
+from typing import Any, Self
 
 from .exceptions import FindogApiError, FindogValidationError
-from .generated import errors
 from .generated.api.integration import (
     integration_append_integration_obligation_note as append_note_api,
 )
@@ -137,7 +136,7 @@ class FindogClient:
     def close(self) -> None:
         self._client.get_httpx_client().close()
 
-    def __enter__(self) -> FindogClient:
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(self, *_: object) -> None:
