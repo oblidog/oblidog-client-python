@@ -53,11 +53,21 @@ jobs:
       - name: Download integration OpenAPI schema
         env:
           RELEASE_TAG: ${{ steps.release.outputs.tag }}
+        shell: bash
         run: |
           mkdir -p openapi
-          curl --fail --location --retry 3 \
-            "https://github.com/findog-app/findog-ledger/releases/download/${RELEASE_TAG}/integration-openapi.json" \
-            --output openapi/integration.json
+          base_url="https://github.com/findog-app/findog-ledger/releases/download/${RELEASE_TAG}"
+
+          if curl --fail --location --retry 3 \
+            "${base_url}/integration-openapi.json" \
+            --output openapi/integration.json; then
+            echo "Downloaded integration-openapi.json"
+          else
+            echo "Canonical asset not found; trying legacy integration.json"
+            curl --fail --location --retry 3 \
+              "${base_url}/integration.json" \
+              --output openapi/integration.json
+          fi
 
       - name: Generate client
         run: |
