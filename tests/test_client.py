@@ -4,9 +4,9 @@ import json
 
 import httpx
 import pytest
+
 from findog_client import FindogClient, FindogValidationError, ObligationLifecycle
 from findog_client.generated import errors
-
 
 OBLIGATION = {
     "id": "11111111-1111-1111-1111-111111111111",
@@ -93,7 +93,9 @@ def test_update_obligation_serializes_only_supplied_values() -> None:
 def test_append_note_uses_append_only_endpoint() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         assert request.method == "POST"
-        assert request.url.path == "/api/v1/integration/obligations/energy-2026-08/notes"
+        assert (
+            request.url.path == "/api/v1/integration/obligations/energy-2026-08/notes"
+        )
         assert_auth(request)
         assert json.loads(request.content) == {"text": "Imported invoice FV/123/2026"}
         return httpx.Response(
