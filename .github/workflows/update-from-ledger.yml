@@ -1,0 +1,115 @@
+name: Update client from Findog Ledger
+
+on:
+  repository_dispatch:
+    types:
+      - ledger-release
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Findog Ledger release tag, for example v0.2.0
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: update-client-from-ledger
+  cancel-in-progress: false
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Resolve Ledger release tag
+        id: release
+        env:
+          DISPATCH_TAG: ${{ github.event.client_payload.tag_name }}
+          MANUAL_TAG: ${{ inputs.release_tag }}
+        shell: bash
+        run: |
+          tag="${DISPATCH_TAG:-$MANUAL_TAG}"
+          if [[ -z "$tag" ]]; then
+            echo "Ledger release tag is required" >&2
+            exit 1
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Sync dependencies
+        run: uv sync
+
+      - name: Download integration OpenAPI schema
+        env:
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          mkdir -p openapi
+          curl --fail --location --retry 3 \
+            "https://github.com/findog-app/findog-ledger/releases/download/${RELEASE_TAG}/integration-openapi.json" \
+            --output openapi/integration.json
+
+      - name: Generate client
+        run: |
+          uv run openapi-python-client generate \
+            --path openapi/integration.json \
+            --config openapi-client.yaml \
+            --meta none \
+            --output-path src/findog_client/generated \
+            --overwrite
+
+      - name: Validate generated client
+        run: |
+          uv run python -m compileall -q src/findog_client/generated
+          uv build
+
+      - name: Create update pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+        shell: bash
+        run: |
+          if [[ -z "$(git status --porcelain)" ]]; then
+            echo "No client changes for ${RELEASE_TAG}."
+            exit 0
+          fi
+
+          branch="bot/update-from-ledger-${RELEASE_TAG}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$branch"
+          git add openapi/integration.json src/findog_client/generated
+          git commit -m "chore: regenerate client from ledger ${RELEASE_TAG}"
+          git push --force origin "$branch"
+
+          existing_pr="$(gh pr list \
+            --base main \
+            --head "$branch" \
+            --state open \
+            --json url \
+            --jq '.[0].url // empty')"
+
+          if [[ -n "$existing_pr" ]]; then
+            echo "Update PR already exists: $existing_pr"
+            exit 0
+          fi
+
+          gh pr create \
+            --base main \
+            --head "$branch" \
+            --title "chore: update client from ledger ${RELEASE_TAG}" \
+            --body "Regenerates the low-level Python client from the integration OpenAPI contract published with Findog Ledger ${RELEASE_TAG}."
