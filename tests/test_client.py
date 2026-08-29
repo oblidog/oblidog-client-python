@@ -1,11 +1,17 @@
 from __future__ import annotations
 
+import datetime
 import json
 
 import httpx
 import pytest
 
-from findog_client import FindogClient, FindogValidationError, ObligationLifecycle
+from findog_client import (
+    FindogApiError,
+    FindogClient,
+    FindogValidationError,
+    ObligationLifecycle,
+)
 from findog_client.generated import errors
 
 OBLIGATION = {
@@ -32,6 +38,29 @@ OBLIGATION = {
     "paid_at": None,
     "created_at": "2026-08-01T10:00:00Z",
     "updated_at": "2026-08-01T10:00:00Z",
+}
+
+CATEGORY_RECORD = {
+    "id": "44444444-4444-4444-4444-444444444444",
+    "observed_at": "2026-08-01T10:00:00+00:00",
+    "data": {"meter_reading_kwh": 1234.5},
+    "source": "utility-import",
+    "external_id": None,
+    "schema_version": 1,
+    "created_at": "2026-08-01T10:01:00+00:00",
+}
+
+COMPONENT = {
+    "id": "55555555-5555-5555-5555-555555555555",
+    "obligation_id": OBLIGATION["id"],
+    "type": "principal",
+    "label": "August electricity",
+    "amount": "425.30",
+    "source": None,
+    "external_id": None,
+    "metadata": {"invoice_number": "FV/123/2026"},
+    "created_at": "2026-08-01T10:00:00+00:00",
+    "updated_at": "2026-08-01T10:00:00+00:00",
 }
 
 
@@ -147,3 +176,121 @@ def test_undocumented_status_is_not_silently_returned_as_none() -> None:
         client.obligations.get("energy-2026-08")
 
     assert exc_info.value.status_code == 500
+
+
+def test_category_data_schema_and_list_send_expected_requests() -> None:
+    requests: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        assert_auth(request)
+        if request.url.path.endswith("/data-schema"):
+            return httpx.Response(
+                200,
+                json={
+                    "version": 1,
+                    "is_active": True,
+                    "schema": {"type": "object"},
+                    "created_at": "2026-08-01T10:00:00+00:00",
+                },
+            )
+        return httpx.Response(200, json={"data": [CATEGORY_RECORD], "count": 1})
+
+    with make_client(httpx.MockTransport(handler)) as client:
+        schema = client.category_data.schema("energy")
+        records = client.category_data.list(
+            "energy",
+            from_=datetime.datetime(2026, 8, 1, tzinfo=datetime.UTC),
+            to=datetime.datetime(2026, 8, 2, tzinfo=datetime.UTC),
+            limit=5,
+            offset=2,
+        )
+
+    assert schema.version == 1
+    assert records.data[0].data.to_dict() == {"meter_reading_kwh": 1234.5}
+    assert requests[0].url.path == "/api/v1/integration/categories/energy/data-schema"
+    assert dict(requests[1].url.params) == {
+        "from": "2026-08-01T00:00:00+00:00",
+        "to": "2026-08-02T00:00:00+00:00",
+        "limit": "5",
+        "offset": "2",
+    }
+
+
+def test_category_data_create_wraps_dict_and_preserves_explicit_none() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.method == "POST"
+        assert request.url.path == "/api/v1/integration/categories/energy/data-records"
+        assert json.loads(request.content) == {
+            "observed_at": "2026-08-01T10:00:00+00:00",
+            "data": {"meter_reading_kwh": 1234.5},
+            "source": None,
+        }
+        return httpx.Response(200, json=CATEGORY_RECORD)
+
+    with make_client(httpx.MockTransport(handler)) as client:
+        record = client.category_data.create(
+            "energy",
+            observed_at=datetime.datetime(2026, 8, 1, 10, tzinfo=datetime.UTC),
+            data={"meter_reading_kwh": 1234.5},
+            source=None,
+        )
+
+    assert record.schema_version == 1
+
+
+def test_category_data_latest_validation_becomes_high_level_exception() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(422, json={"detail": []})
+
+    with (
+        make_client(httpx.MockTransport(handler)) as client,
+        pytest.raises(FindogValidationError),
+    ):
+        client.category_data.latest("unknown")
+
+
+def test_obligation_components_use_dict_metadata_and_optional_values() -> None:
+    requests: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        assert_auth(request)
+        if request.method == "GET":
+            return httpx.Response(200, json={"data": [COMPONENT], "count": 1})
+        assert json.loads(request.content) == {
+            "type": "principal",
+            "label": "August electricity",
+            "amount": None,
+            "metadata": {"invoice_number": "FV/123/2026"},
+            "source": None,
+        }
+        return httpx.Response(200, json=COMPONENT)
+
+    with make_client(httpx.MockTransport(handler)) as client:
+        components = client.obligations.list_components("energy-2026-08")
+        component = client.obligations.upsert_component(
+            "energy-2026-08",
+            type="principal",
+            label="August electricity",
+            amount=None,
+            source=None,
+            metadata={"invoice_number": "FV/123/2026"},
+        )
+
+    assert components.count == 1
+    assert component.metadata.to_dict() == {"invoice_number": "FV/123/2026"}
+    assert requests[0].url.path.endswith("/components")
+    assert requests[1].url.path.endswith("/components/upsert")
+
+
+def test_missing_parsed_response_becomes_api_error() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(500, text="boom")
+
+    with make_client(httpx.MockTransport(handler)) as client:
+        client._client.raise_on_unexpected_status = False
+        with pytest.raises(FindogApiError) as exc_info:
+            client.category_data.latest("energy")
+
+    assert exc_info.value.status_code == 0
