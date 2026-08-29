@@ -183,7 +183,9 @@ class CategoryDataClient:
         self._client = client
 
     def schema(self, category_code: str) -> CategoryDataSchemaPublic:
-        return _result(schema_category_data_api.sync(category_code, client=self._client))
+        return _result(
+            schema_category_data_api.sync(category_code, client=self._client)
+        )
 
     def list(
         self,
@@ -206,7 +208,9 @@ class CategoryDataClient:
         )
 
     def latest(self, category_code: str) -> CategoryDataRecordPublic:
-        return _result(latest_category_data_api.sync(category_code, client=self._client))
+        return _result(
+            latest_category_data_api.sync(category_code, client=self._client)
+        )
 
     def create(
         self,

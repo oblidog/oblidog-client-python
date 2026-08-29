@@ -22,7 +22,7 @@ with FindogClient(
     )
 
     obligation = client.obligations.update(
-        "enea-2026-08",
+        "ENRG-2026-08",
         current_amount="425.30",
     )
     client.obligations.append_note(
@@ -41,12 +41,12 @@ with FindogClient(
     components = client.obligations.list_components(obligation.key)
 
     record = client.category_data.create(
-        "energy",
+        "ENRG",
         observed_at=datetime.datetime(2026, 8, 1, tzinfo=datetime.UTC),
         data={"meter_reading_kwh": 1234.5},
         source="utility-import",
     )
-    latest_record = client.category_data.latest("energy")
+    latest_record = client.category_data.latest("ENRG")
 ```
 
 Category data operations are `schema`, `list`, `latest`, and `create`. Available obligation operations are `list`, `get`, `update`, `append_note`, `list_components`, `upsert_component`, `mark_ready`, `mark_paid`, `cancel`, `reopen`, and `mark_error`.

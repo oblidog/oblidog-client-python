@@ -18,8 +18,8 @@ OBLIGATION = {
     "id": "11111111-1111-1111-1111-111111111111",
     "ledger_id": "22222222-2222-2222-2222-222222222222",
     "category_id": "33333333-3333-3333-3333-333333333333",
-    "category_code": "energy",
-    "key": "energy-2026-08",
+    "category_code": "ENRG",
+    "key": "ENRG-2026-08",
     "name": "Energy",
     "notes": None,
     "lifecycle": "ready",
@@ -84,7 +84,7 @@ def test_list_obligations_sends_filters_and_authentication() -> None:
         assert dict(request.url.params) == {
             "year": "2026",
             "month": "8",
-            "category_code": "energy",
+            "category_code": "ENRG",
             "lifecycle": "ready",
         }
         assert_auth(request)
@@ -94,25 +94,25 @@ def test_list_obligations_sends_filters_and_authentication() -> None:
         result = client.obligations.list(
             year=2026,
             month=8,
-            category_code="energy",
+            category_code="ENRG",
             lifecycle=ObligationLifecycle.READY,
         )
 
     assert result.count == 1
-    assert result.data[0].key == "energy-2026-08"
+    assert result.data[0].key == "ENRG-2026-08"
 
 
 def test_update_obligation_serializes_only_supplied_values() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         assert request.method == "PATCH"
-        assert request.url.path == "/api/v1/integration/obligations/energy-2026-08"
+        assert request.url.path == "/api/v1/integration/obligations/ENRG-2026-08"
         assert_auth(request)
         assert json.loads(request.content) == {"current_amount": "450.00"}
         return httpx.Response(200, json={**OBLIGATION, "current_amount": "450.00"})
 
     with make_client(httpx.MockTransport(handler)) as client:
         result = client.obligations.update(
-            "energy-2026-08",
+            "ENRG-2026-08",
             current_amount="450.00",
         )
 
@@ -122,9 +122,7 @@ def test_update_obligation_serializes_only_supplied_values() -> None:
 def test_append_note_uses_append_only_endpoint() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         assert request.method == "POST"
-        assert (
-            request.url.path == "/api/v1/integration/obligations/energy-2026-08/notes"
-        )
+        assert request.url.path == "/api/v1/integration/obligations/ENRG-2026-08/notes"
         assert_auth(request)
         assert json.loads(request.content) == {"text": "Imported invoice FV/123/2026"}
         return httpx.Response(
@@ -134,7 +132,7 @@ def test_append_note_uses_append_only_endpoint() -> None:
 
     with make_client(httpx.MockTransport(handler)) as client:
         result = client.obligations.append_note(
-            "energy-2026-08",
+            "ENRG-2026-08",
             "Imported invoice FV/123/2026",
         )
 
@@ -173,7 +171,7 @@ def test_undocumented_status_is_not_silently_returned_as_none() -> None:
         make_client(httpx.MockTransport(handler)) as client,
         pytest.raises(errors.UnexpectedStatus) as exc_info,
     ):
-        client.obligations.get("energy-2026-08")
+        client.obligations.get("ENRG-2026-08")
 
     assert exc_info.value.status_code == 500
 
@@ -197,9 +195,9 @@ def test_category_data_schema_and_list_send_expected_requests() -> None:
         return httpx.Response(200, json={"data": [CATEGORY_RECORD], "count": 1})
 
     with make_client(httpx.MockTransport(handler)) as client:
-        schema = client.category_data.schema("energy")
+        schema = client.category_data.schema("ENRG")
         records = client.category_data.list(
-            "energy",
+            "ENRG",
             from_=datetime.datetime(2026, 8, 1, tzinfo=datetime.UTC),
             to=datetime.datetime(2026, 8, 2, tzinfo=datetime.UTC),
             limit=5,
@@ -208,7 +206,7 @@ def test_category_data_schema_and_list_send_expected_requests() -> None:
 
     assert schema.version == 1
     assert records.data[0].data.to_dict() == {"meter_reading_kwh": 1234.5}
-    assert requests[0].url.path == "/api/v1/integration/categories/energy/data-schema"
+    assert requests[0].url.path == "/api/v1/integration/categories/ENRG/data-schema"
     assert dict(requests[1].url.params) == {
         "from": "2026-08-01T00:00:00+00:00",
         "to": "2026-08-02T00:00:00+00:00",
@@ -220,7 +218,7 @@ def test_category_data_schema_and_list_send_expected_requests() -> None:
 def test_category_data_create_wraps_dict_and_preserves_explicit_none() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         assert request.method == "POST"
-        assert request.url.path == "/api/v1/integration/categories/energy/data-records"
+        assert request.url.path == "/api/v1/integration/categories/ENRG/data-records"
         assert json.loads(request.content) == {
             "observed_at": "2026-08-01T10:00:00+00:00",
             "data": {"meter_reading_kwh": 1234.5},
@@ -230,7 +228,7 @@ def test_category_data_create_wraps_dict_and_preserves_explicit_none() -> None:
 
     with make_client(httpx.MockTransport(handler)) as client:
         record = client.category_data.create(
-            "energy",
+            "ENRG",
             observed_at=datetime.datetime(2026, 8, 1, 10, tzinfo=datetime.UTC),
             data={"meter_reading_kwh": 1234.5},
             source=None,
@@ -247,7 +245,7 @@ def test_category_data_latest_validation_becomes_high_level_exception() -> None:
         make_client(httpx.MockTransport(handler)) as client,
         pytest.raises(FindogValidationError),
     ):
-        client.category_data.latest("unknown")
+        client.category_data.latest("ABCD")
 
 
 def test_obligation_components_use_dict_metadata_and_optional_values() -> None:
@@ -268,9 +266,9 @@ def test_obligation_components_use_dict_metadata_and_optional_values() -> None:
         return httpx.Response(200, json=COMPONENT)
 
     with make_client(httpx.MockTransport(handler)) as client:
-        components = client.obligations.list_components("energy-2026-08")
+        components = client.obligations.list_components("ENRG-2026-08")
         component = client.obligations.upsert_component(
-            "energy-2026-08",
+            "ENRG-2026-08",
             type="principal",
             label="August electricity",
             amount=None,
@@ -291,6 +289,6 @@ def test_missing_parsed_response_becomes_api_error() -> None:
     with make_client(httpx.MockTransport(handler)) as client:
         client._client.raise_on_unexpected_status = False
         with pytest.raises(FindogApiError) as exc_info:
-            client.category_data.latest("energy")
+            client.category_data.latest("ENRG")
 
     assert exc_info.value.status_code == 0
