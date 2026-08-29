@@ -1,6 +1,158 @@
 {
   "components": {
     "schemas": {
+      "CategoryDataRecordCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "external_id": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Id"
+          },
+          "observed_at": {
+            "format": "date-time",
+            "title": "Observed At",
+            "type": "string"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          }
+        },
+        "required": [
+          "observed_at",
+          "data"
+        ],
+        "title": "CategoryDataRecordCreate",
+        "type": "object"
+      },
+      "CategoryDataRecordPublic": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "data": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "external_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Id"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "observed_at": {
+            "format": "date-time",
+            "title": "Observed At",
+            "type": "string"
+          },
+          "schema_version": {
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          }
+        },
+        "required": [
+          "id",
+          "schema_version",
+          "observed_at",
+          "created_at",
+          "data",
+          "source",
+          "external_id"
+        ],
+        "title": "CategoryDataRecordPublic",
+        "type": "object"
+      },
+      "CategoryDataRecordsPublic": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryDataRecordPublic"
+            },
+            "title": "Data",
+            "type": "array"
+          }
+        },
+        "required": [
+          "data",
+          "count"
+        ],
+        "title": "CategoryDataRecordsPublic",
+        "type": "object"
+      },
+      "CategoryDataSchemaPublic": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "schema": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "schema",
+          "is_active",
+          "created_at"
+        ],
+        "type": "object"
+      },
       "CurrentValueSource": {
         "enum": [
           "unknown",
@@ -110,6 +262,195 @@
           "name"
         ],
         "title": "LedgerUpdate",
+        "type": "object"
+      },
+      "ObligationComponentPublic": {
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "external_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Id"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metadata"
+          },
+          "obligation_id": {
+            "format": "uuid",
+            "title": "Obligation Id",
+            "type": "string"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "obligation_id",
+          "type",
+          "label",
+          "amount",
+          "source",
+          "external_id",
+          "metadata",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ObligationComponentPublic",
+        "type": "object"
+      },
+      "ObligationComponentUpsert": {
+        "additionalProperties": false,
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "external_id": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Id"
+          },
+          "label": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metadata"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "type": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "label"
+        ],
+        "title": "ObligationComponentUpsert",
+        "type": "object"
+      },
+      "ObligationComponentsPublic": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/ObligationComponentPublic"
+            },
+            "title": "Data",
+            "type": "array"
+          }
+        },
+        "required": [
+          "data",
+          "count"
+        ],
+        "title": "ObligationComponentsPublic",
         "type": "object"
       },
       "ObligationIntegrationUpdate": {
@@ -453,6 +794,263 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/integration/categories/{category_code}/data-records": {
+      "get": {
+        "operationId": "integration-read_integration_category_data_records",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "category_code",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Z]{4}$",
+              "title": "Category Code",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryDataRecordsPublic"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "IntegrationApiKey": []
+          }
+        ],
+        "summary": "Read Integration Category Data Records",
+        "tags": [
+          "integration"
+        ]
+      },
+      "post": {
+        "operationId": "integration-create_integration_category_data_record",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "category_code",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Z]{4}$",
+              "title": "Category Code",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryDataRecordCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryDataRecordPublic"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "IntegrationApiKey": []
+          }
+        ],
+        "summary": "Create Integration Category Data Record",
+        "tags": [
+          "integration"
+        ]
+      }
+    },
+    "/api/v1/integration/categories/{category_code}/data-records/latest": {
+      "get": {
+        "operationId": "integration-read_latest_integration_category_data_record",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "category_code",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Z]{4}$",
+              "title": "Category Code",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryDataRecordPublic"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "IntegrationApiKey": []
+          }
+        ],
+        "summary": "Read Latest Integration Category Data Record",
+        "tags": [
+          "integration"
+        ]
+      }
+    },
+    "/api/v1/integration/categories/{category_code}/data-schema": {
+      "get": {
+        "operationId": "integration-read_integration_category_data_schema",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "category_code",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Z]{4}$",
+              "title": "Category Code",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryDataSchemaPublic"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "IntegrationApiKey": []
+          }
+        ],
+        "summary": "Read Integration Category Data Schema",
+        "tags": [
+          "integration"
+        ]
+      }
+    },
     "/api/v1/integration/ledger": {
       "get": {
         "description": "Return only the ledger selected by the authenticated API key.",
@@ -776,6 +1374,110 @@
           }
         ],
         "summary": "Cancel Integration Obligation",
+        "tags": [
+          "integration"
+        ]
+      }
+    },
+    "/api/v1/integration/obligations/{obligation_key}/components": {
+      "get": {
+        "operationId": "integration-read_integration_obligation_components",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "obligation_key",
+            "required": true,
+            "schema": {
+              "title": "Obligation Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObligationComponentsPublic"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "IntegrationApiKey": []
+          }
+        ],
+        "summary": "Read Integration Obligation Components",
+        "tags": [
+          "integration"
+        ]
+      }
+    },
+    "/api/v1/integration/obligations/{obligation_key}/components/upsert": {
+      "put": {
+        "operationId": "integration-upsert_integration_obligation_component",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "obligation_key",
+            "required": true,
+            "schema": {
+              "title": "Obligation Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ObligationComponentUpsert"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObligationComponentPublic"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "IntegrationApiKey": []
+          }
+        ],
+        "summary": "Upsert Integration Obligation Component",
         "tags": [
           "integration"
         ]
