@@ -1,8 +1,14 @@
-# findog-client-python
+# oblidog-client
 
 Python client for the Oblidog integration API.
 
 The generated OpenAPI client lives under `oblidog_client.generated` and is treated as an implementation detail. Integrations should normally use the handwritten `OblidogClient` facade.
+
+## Installation
+
+```bash
+pip install oblidog-client
+```
 
 ## Usage
 
