@@ -70,3 +70,5 @@ Run the same distribution verification used by CI locally:
 ```
 
 The command builds the wheel and source distribution, validates their metadata and contents, installs the wheel into a clean environment, and checks the installed public API. It does not publish any artifacts.
+
+Release maintainers should follow the [Trusted Publishing setup and release procedure](docs/releasing.md).

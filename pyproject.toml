@@ -54,4 +54,4 @@ line-length = 88
 exclude = ["src/oblidog_client/generated"]
 
 [tool.pytest.ini_options]
-pythonpath = ["src"]
+pythonpath = ["src", "."]
