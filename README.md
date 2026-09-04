@@ -62,3 +62,11 @@ Unexpected HTTP statuses raise `OblidogApiError`/the generated transport excepti
 ## Development
 
 This project uses `uv` for dependency and environment management. The low-level client is generated from the Oblidog Ledger integration OpenAPI contract; generated code should not be edited manually.
+
+Run the same distribution verification used by CI locally:
+
+```bash
+./scripts/verify-package.sh
+```
+
+The command builds the wheel and source distribution, validates their metadata and contents, installs the wheel into a clean environment, and checks the installed public API. It does not publish any artifacts.

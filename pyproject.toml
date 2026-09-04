@@ -38,6 +38,7 @@ dev = [
   "openapi-python-client>=0.25",
   "pytest>=8.0",
   "ruff>=0.6",
+  "twine>=6.1",
 ]
 
 [build-system]
