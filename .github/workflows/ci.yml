@@ -43,7 +43,7 @@ jobs:
         run: uv run pytest -q
 
       - name: Compile package
-        run: python -m compileall -q src/findog_client
+        run: python -m compileall -q src/oblidog_client
 
       - name: Build package
         run: uv build
@@ -52,4 +52,4 @@ jobs:
         run: |
           uv venv "$RUNNER_TEMP/wheel-test-venv"
           uv pip install --python "$RUNNER_TEMP/wheel-test-venv/bin/python" dist/*.whl
-          "$RUNNER_TEMP/wheel-test-venv/bin/python" -c "from findog_client import FindogClient"
+          "$RUNNER_TEMP/wheel-test-venv/bin/python" -c "from oblidog_client import OblidogClient"

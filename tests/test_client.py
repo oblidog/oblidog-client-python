@@ -6,13 +6,13 @@ import json
 import httpx
 import pytest
 
-from findog_client import (
-    FindogApiError,
-    FindogClient,
-    FindogValidationError,
+from oblidog_client import (
+    OblidogApiError,
+    OblidogClient,
+    OblidogValidationError,
     ObligationLifecycle,
 )
-from findog_client.generated import errors
+from oblidog_client.generated import errors
 
 OBLIGATION = {
     "id": "11111111-1111-1111-1111-111111111111",
@@ -64,9 +64,9 @@ COMPONENT = {
 }
 
 
-def make_client(handler: httpx.MockTransport) -> FindogClient:
-    client = FindogClient(
-        base_url="https://findog.example.test/",
+def make_client(handler: httpx.MockTransport) -> OblidogClient:
+    client = OblidogClient(
+        base_url="https://oblidog.example.test/",
         api_key="fdg_live_test",
     )
     client._client._httpx_args["transport"] = handler
@@ -157,7 +157,7 @@ def test_validation_response_becomes_high_level_exception() -> None:
 
     with (
         make_client(httpx.MockTransport(handler)) as client,
-        pytest.raises(FindogValidationError),
+        pytest.raises(OblidogValidationError),
     ):
         client.obligations.list(month=13)
 
@@ -243,7 +243,7 @@ def test_category_data_latest_validation_becomes_high_level_exception() -> None:
 
     with (
         make_client(httpx.MockTransport(handler)) as client,
-        pytest.raises(FindogValidationError),
+        pytest.raises(OblidogValidationError),
     ):
         client.category_data.latest("ABCD")
 
@@ -288,7 +288,7 @@ def test_missing_parsed_response_becomes_api_error() -> None:
 
     with make_client(httpx.MockTransport(handler)) as client:
         client._client.raise_on_unexpected_status = False
-        with pytest.raises(FindogApiError) as exc_info:
+        with pytest.raises(OblidogApiError) as exc_info:
             client.category_data.latest("ENRG")
 
     assert exc_info.value.status_code == 0

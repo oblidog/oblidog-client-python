@@ -15,7 +15,7 @@ All changes should reach `main` through pull requests.
 
 ## Generated code
 
-`src/findog_client/generated/` is generated from the Findog Ledger integration OpenAPI contract. Do not edit files in that directory by hand.
+`src/oblidog_client/generated/` is generated from the Oblidog Ledger integration OpenAPI contract. Do not edit files in that directory by hand.
 
 The source snapshot used for generation lives in `openapi/integration.json`.
 
@@ -28,7 +28,7 @@ uv sync --all-groups
 uv run ruff check src tests
 uv run ruff format --check src tests
 uv run pytest -q
-python -m compileall -q src/findog_client
+python -m compileall -q src/oblidog_client
 uv build
 ```
 

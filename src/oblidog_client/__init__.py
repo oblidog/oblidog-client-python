@@ -1,7 +1,7 @@
-"""Python client for the Findog integration API."""
+"""Python client for the Oblidog integration API."""
 
-from .client import CategoryDataClient, FindogClient, ObligationsClient
-from .exceptions import FindogApiError, FindogError, FindogValidationError
+from .client import CategoryDataClient, OblidogClient, ObligationsClient
+from .exceptions import OblidogApiError, OblidogError, OblidogValidationError
 from .generated.models.category_data_record_public import CategoryDataRecordPublic
 from .generated.models.category_data_records_public import CategoryDataRecordsPublic
 from .generated.models.category_data_schema_public import CategoryDataSchemaPublic
@@ -16,10 +16,10 @@ __all__ = [
     "CategoryDataRecordPublic",
     "CategoryDataRecordsPublic",
     "CategoryDataSchemaPublic",
-    "FindogApiError",
-    "FindogClient",
-    "FindogError",
-    "FindogValidationError",
+    "OblidogApiError",
+    "OblidogClient",
+    "OblidogError",
+    "OblidogValidationError",
     "ObligationComponentPublic",
     "ObligationComponentsPublic",
     "ObligationLifecycle",

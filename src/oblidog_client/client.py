@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime
 from typing import Any, Self
 
-from .exceptions import FindogApiError, FindogValidationError
+from .exceptions import OblidogApiError, OblidogValidationError
 from .generated.api.integration import (
     integration_append_integration_obligation_note as append_note_api,
 )
@@ -74,9 +74,9 @@ from .generated.types import UNSET
 
 def _result(value: Any) -> Any:
     if isinstance(value, HTTPValidationError):
-        raise FindogValidationError(str(value.to_dict()))
+        raise OblidogValidationError(str(value.to_dict()))
     if value is None:
-        raise FindogApiError(0, b"API returned no parsed response")
+        raise OblidogApiError(0, b"API returned no parsed response")
     return value
 
 
@@ -232,8 +232,8 @@ class CategoryDataClient:
         )
 
 
-class FindogClient:
-    """Public synchronous client for the Findog integration API."""
+class OblidogClient:
+    """Public synchronous client for the Oblidog integration API."""
 
     def __init__(
         self,
