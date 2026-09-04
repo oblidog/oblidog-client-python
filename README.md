@@ -1,18 +1,18 @@
 # findog-client-python
 
-Python client for the Findog integration API.
+Python client for the Oblidog integration API.
 
-The generated OpenAPI client lives under `findog_client.generated` and is treated as an implementation detail. Integrations should normally use the handwritten `FindogClient` facade.
+The generated OpenAPI client lives under `oblidog_client.generated` and is treated as an implementation detail. Integrations should normally use the handwritten `OblidogClient` facade.
 
 ## Usage
 
 ```python
 import datetime
 
-from findog_client import FindogClient, ObligationLifecycle
+from oblidog_client import OblidogClient, ObligationLifecycle
 
-with FindogClient(
-    base_url="https://findog.example.com",
+with OblidogClient(
+    base_url="https://oblidog.example.com",
     api_key="fdg_live_...",
 ) as client:
     obligations = client.obligations.list(
@@ -51,8 +51,8 @@ with FindogClient(
 
 Category data operations are `schema`, `list`, `latest`, and `create`. Available obligation operations are `list`, `get`, `update`, `append_note`, `list_components`, `upsert_component`, `mark_ready`, `mark_paid`, `cancel`, `reopen`, and `mark_error`.
 
-Unexpected HTTP statuses raise `FindogApiError`/the generated transport exception rather than silently returning `None`. Validation responses are surfaced as `FindogValidationError`.
+Unexpected HTTP statuses raise `OblidogApiError`/the generated transport exception rather than silently returning `None`. Validation responses are surfaced as `OblidogValidationError`.
 
 ## Development
 
-This project uses `uv` for dependency and environment management. The low-level client is generated from the Findog Ledger integration OpenAPI contract; generated code should not be edited manually.
+This project uses `uv` for dependency and environment management. The low-level client is generated from the Oblidog Ledger integration OpenAPI contract; generated code should not be edited manually.
