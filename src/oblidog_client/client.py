@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+import uuid
 from typing import Any, Self
 
 from .exceptions import OblidogApiError, OblidogValidationError
@@ -12,6 +13,9 @@ from .generated.api.integration import (
 )
 from .generated.api.integration import (
     integration_create_integration_category_data_record as create_category_data_api,
+)
+from .generated.api.integration import (
+    integration_finish_integration_run as finish_run_api,
 )
 from .generated.api.integration import (
     integration_mark_integration_obligation_error as mark_error_api,
@@ -29,6 +33,9 @@ from .generated.api.integration import (
     integration_read_integration_category_data_schema as schema_category_data_api,
 )
 from .generated.api.integration import (
+    integration_read_integration_instance as get_instance_api,
+)
+from .generated.api.integration import (
     integration_read_integration_obligation as get_api,
 )
 from .generated.api.integration import (
@@ -42,6 +49,9 @@ from .generated.api.integration import (
 )
 from .generated.api.integration import (
     integration_reopen_integration_obligation as reopen_api,
+)
+from .generated.api.integration import (
+    integration_start_integration_run as start_run_api,
 )
 from .generated.api.integration import (
     integration_update_integration_obligation as update_api,
@@ -58,6 +68,11 @@ from .generated.models.category_data_record_public import CategoryDataRecordPubl
 from .generated.models.category_data_records_public import CategoryDataRecordsPublic
 from .generated.models.category_data_schema_public import CategoryDataSchemaPublic
 from .generated.models.http_validation_error import HTTPValidationError
+from .generated.models.integration_public import IntegrationPublic
+from .generated.models.integration_result import IntegrationResult
+from .generated.models.integration_run_error import IntegrationRunError
+from .generated.models.integration_run_finish import IntegrationRunFinish
+from .generated.models.integration_run_start import IntegrationRunStart
 from .generated.models.obligation_component_public import ObligationComponentPublic
 from .generated.models.obligation_component_upsert import ObligationComponentUpsert
 from .generated.models.obligation_component_upsert_metadata_type_0 import (
@@ -232,6 +247,59 @@ class CategoryDataClient:
         )
 
 
+class IntegrationsClient:
+    """Read instance health and report runs using the existing ledger API key.
+
+    Callers own run IDs and bounded retries. A conflict must never automatically
+    refresh a revision and replay an old invocation.
+    """
+
+    def __init__(self, client: AuthenticatedClient) -> None:
+        self._client = client
+
+    def get(self, integration_key: str) -> IntegrationPublic:
+        return _result(get_instance_api.sync(integration_key, client=self._client))
+
+    def start(
+        self,
+        integration_key: str,
+        *,
+        run_id: uuid.UUID,
+        expected_revision: int,
+    ) -> IntegrationPublic:
+        return _result(
+            start_run_api.sync(
+                integration_key,
+                client=self._client,
+                body=IntegrationRunStart(
+                    run_id=run_id, expected_revision=expected_revision
+                ),
+            )
+        )
+
+    def finish(
+        self,
+        integration_key: str,
+        *,
+        run_id: uuid.UUID,
+        result: IntegrationResult,
+        changes_detected: bool | None = None,
+        error: IntegrationRunError | None = None,
+    ) -> IntegrationPublic:
+        return _result(
+            finish_run_api.sync(
+                integration_key,
+                client=self._client,
+                body=IntegrationRunFinish(
+                    run_id=run_id,
+                    result=result,
+                    changes_detected=changes_detected,
+                    error=error,
+                ),
+            )
+        )
+
+
 class OblidogClient:
     """Public synchronous client for the Oblidog integration API."""
 
@@ -250,6 +318,7 @@ class OblidogClient:
         )
         self.obligations = ObligationsClient(self._client)
         self.category_data = CategoryDataClient(self._client)
+        self.integrations = IntegrationsClient(self._client)
 
     def close(self) -> None:
         self._client.get_httpx_client().close()

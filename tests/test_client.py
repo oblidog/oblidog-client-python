@@ -292,3 +292,198 @@ def test_missing_parsed_response_becomes_api_error() -> None:
             client.category_data.latest("ENRG")
 
     assert exc_info.value.status_code == 0
+
+
+INTEGRATION = {
+    "id": "55555555-5555-5555-5555-555555555555",
+    "ledger_id": OBLIGATION["ledger_id"],
+    "key": "nju-mario",
+    "provider": "nju",
+    "name": "Phone",
+    "category_ids": [],
+    "enabled": True,
+    "created_at": "2026-09-08T09:00:00Z",
+    "updated_at": "2026-09-08T09:00:00Z",
+    "enabled_at": "2026-09-08T09:00:00Z",
+    "stale_after_seconds": 93600,
+    "run_timeout_seconds": 1800,
+    "revision": 0,
+    "current_run_id": None,
+    "current_started_at": None,
+    "current_finished_at": None,
+    "last_finished_at": None,
+    "last_result": None,
+    "last_changes_detected": None,
+    "last_error_code": None,
+    "last_error_message": None,
+    "last_success_at": None,
+    "execution_state": "never_run",
+    "is_stale": False,
+    "health": "never_run",
+}
+
+
+def test_integration_get_and_start_use_shared_auth_and_caller_run_identity() -> None:
+    import uuid
+
+    from oblidog_client import IntegrationHealth
+
+    run_id = uuid.uuid4()
+    requests = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        assert_auth(request)
+        if request.method == "GET":
+            assert request.url.path == "/api/v1/integration/instances/nju-mario"
+            return httpx.Response(200, json=INTEGRATION)
+        assert request.url.path == "/api/v1/integration/instances/nju-mario/start"
+        assert json.loads(request.content) == {
+            "run_id": str(run_id),
+            "expected_revision": 0,
+        }
+        return httpx.Response(
+            200,
+            json={
+                **INTEGRATION,
+                "current_run_id": str(run_id),
+                "current_started_at": "2026-09-08T09:00:00Z",
+                "revision": 1,
+                "execution_state": "running",
+                "health": "running",
+            },
+        )
+
+    with make_client(httpx.MockTransport(handler)) as client:
+        instance = client.integrations.get("nju-mario")
+        assert instance.health == IntegrationHealth.NEVER_RUN
+        for _ in range(2):
+            started = client.integrations.start(
+                "nju-mario", run_id=run_id, expected_revision=instance.revision
+            )
+            assert started.current_run_id == run_id
+            assert started.revision == 1
+    assert len(requests) == 3
+    assert requests[1].content == requests[2].content
+
+
+@pytest.mark.parametrize("changes", [True, False, None])
+def test_integration_success_preserves_nullable_change_signal(
+    changes: bool | None,
+) -> None:
+    import uuid
+
+    from oblidog_client import IntegrationResult
+
+    run_id = uuid.uuid4()
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert_auth(request)
+        assert request.method == "POST"
+        assert request.url.path == "/api/v1/integration/instances/nju-mario/finish"
+        assert json.loads(request.content) == {
+            "run_id": str(run_id),
+            "result": "success",
+            "changes_detected": changes,
+            "error": None,
+        }
+        return httpx.Response(
+            200,
+            json={
+                **INTEGRATION,
+                "last_result": "success",
+                "last_changes_detected": changes,
+                "health": "healthy",
+                "execution_state": "finished",
+            },
+        )
+
+    with make_client(httpx.MockTransport(handler)) as client:
+        result = client.integrations.finish(
+            "nju-mario",
+            run_id=run_id,
+            result=IntegrationResult.SUCCESS,
+            changes_detected=changes,
+        )
+        assert result.last_changes_detected is changes
+
+
+def test_integration_failure_sends_sanitized_error() -> None:
+    import uuid
+
+    from oblidog_client import IntegrationResult, IntegrationRunError
+
+    run_id = uuid.uuid4()
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert_auth(request)
+        assert json.loads(request.content) == {
+            "run_id": str(run_id),
+            "result": "failure",
+            "changes_detected": None,
+            "error": {"code": "provider_failed", "message": "Provider unavailable"},
+        }
+        return httpx.Response(
+            200,
+            json={
+                **INTEGRATION,
+                "last_result": "failure",
+                "last_error_code": "provider_failed",
+                "last_error_message": "Provider unavailable",
+                "health": "error",
+                "execution_state": "finished",
+            },
+        )
+
+    with make_client(httpx.MockTransport(handler)) as client:
+        result = client.integrations.finish(
+            "nju-mario",
+            run_id=run_id,
+            result=IntegrationResult.FAILURE,
+            error=IntegrationRunError(
+                code="provider_failed", message="Provider unavailable"
+            ),
+        )
+        assert result.last_result == IntegrationResult.FAILURE
+
+
+@pytest.mark.parametrize("status", [401, 403, 404, 409, 500])
+def test_integration_reporting_propagates_errors_without_retry(status: int) -> None:
+    import uuid
+
+    calls = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        assert_auth(request)
+        return httpx.Response(status, json={"detail": {"code": "revision_conflict"}})
+
+    with make_client(httpx.MockTransport(handler)) as client:
+        with pytest.raises(errors.UnexpectedStatus) as exc:
+            client.integrations.start(
+                "nju-mario", run_id=uuid.uuid4(), expected_revision=0
+            )
+        assert exc.value.status_code == status
+    assert calls == 1
+
+
+def test_integration_validation_error_is_public_exception() -> None:
+    import uuid
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert_auth(request)
+        return httpx.Response(
+            422,
+            json={
+                "detail": [
+                    {"loc": ["body", "run_id"], "msg": "invalid", "type": "value_error"}
+                ]
+            },
+        )
+
+    with (
+        make_client(httpx.MockTransport(handler)) as client,
+        pytest.raises(OblidogValidationError),
+    ):
+        client.integrations.start("nju-mario", run_id=uuid.uuid4(), expected_revision=0)

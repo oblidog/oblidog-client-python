@@ -27,7 +27,11 @@ def main() -> None:
         base_url="https://oblidog.invalid",
         api_key="smoke-test-key",
     )
-    if client.obligations is None or client.category_data is None:
+    if (
+        client.obligations is None
+        or client.category_data is None
+        or client.integrations is None
+    ):
         raise SystemExit("OblidogClient did not initialize its public resources")
 
     print("Installed oblidog_client public API smoke test passed")

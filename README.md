@@ -59,6 +59,48 @@ Category data operations are `schema`, `list`, `latest`, and `create`. Available
 
 Unexpected HTTP statuses raise `OblidogApiError`/the generated transport exception rather than silently returning `None`. Validation responses are surfaced as `OblidogValidationError`.
 
+## Integration health reporting
+
+`client.integrations.get`, `start`, and `finish` use the same ledger API key as
+business-data operations. The instance must first be registered by the ledger
+owner. Reading needs `ledger:read`; reporting needs `ledger:write`.
+
+```python
+import uuid
+from oblidog_client import IntegrationResult
+
+# Use this inside the OblidogClient context shown above.
+instance = client.integrations.get("nju-mario")
+run_id = uuid.uuid4()
+if instance.enabled:
+    started = client.integrations.start(
+        instance.key, run_id=run_id, expected_revision=instance.revision,
+    )
+    if started.current_run_id == run_id and started.current_finished_at is None:
+        # Perform the provider check and all intended synchronization here.
+        # Only after they succeed, report the actual change signal:
+        client.integrations.finish(
+            instance.key, run_id=run_id,
+            result=IntegrationResult.SUCCESS, changes_detected=False,
+        )
+```
+
+A successful no-op uses `changes_detected=False`; use `None` if unknown. On a
+provider/synchronization failure, finish with `IntegrationResult.FAILURE` and
+`IntegrationRunError(code="provider_failed", message="Provider unavailable")`.
+Keep messages sanitized; details and tracebacks belong in local logs.
+
+The caller owns run IDs, retries, scheduling and exception handling. Reuse the
+same ID and identical payload only when retrying that report. Do not auto-refresh
+revisions on conflicts or repeat completed work. Disabled instances cannot start
+new runs; timeout indicates missing completion, not a proven provider failure.
+The client performs no implicit retry. Errors retain existing exception behavior.
+
+These methods require Ledger's integration registry API (stage 2 of issue #115).
+Deploy that backend before enabling reporting. This client update contains a
+contract generated from the corresponding Ledger implementation; no release or
+publication is performed by the update itself.
+
 ## Development
 
 This project uses `uv` for dependency and environment management. The low-level client is generated from the Oblidog Ledger integration OpenAPI contract; generated code should not be edited manually.

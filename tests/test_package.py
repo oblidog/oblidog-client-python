@@ -5,6 +5,12 @@ import importlib.util
 import oblidog_client
 
 EXPECTED_PUBLIC_API = {
+    "IntegrationPublic",
+    "IntegrationRunError",
+    "IntegrationResult",
+    "IntegrationHealth",
+    "IntegrationExecutionState",
+    "IntegrationsClient",
     "CategoryDataClient",
     "CategoryDataRecordPublic",
     "CategoryDataRecordsPublic",
