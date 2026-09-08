@@ -5,6 +5,7 @@ import importlib.util
 from oblidog_client import (
     OblidogApiError,
     OblidogClient,
+    OblidogConflictError,
     OblidogError,
     OblidogValidationError,
 )
@@ -23,11 +24,20 @@ def main() -> None:
             "OblidogValidationError is not part of the public exception hierarchy"
         )
 
+    if not issubclass(OblidogConflictError, OblidogApiError):
+        raise SystemExit(
+            "OblidogConflictError is not part of the public API exception hierarchy"
+        )
+
     client = OblidogClient(
         base_url="https://oblidog.invalid",
         api_key="smoke-test-key",
     )
-    if client.obligations is None or client.category_data is None:
+    if (
+        client.obligations is None
+        or client.category_data is None
+        or client.integrations is None
+    ):
         raise SystemExit("OblidogClient did not initialize its public resources")
 
     print("Installed oblidog_client public API smoke test passed")
