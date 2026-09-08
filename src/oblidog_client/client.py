@@ -4,7 +4,7 @@ import datetime
 import uuid
 from typing import Any, Self
 
-from .exceptions import OblidogApiError, OblidogValidationError
+from .exceptions import OblidogApiError, OblidogConflictError, OblidogValidationError
 from .generated.api.integration import (
     integration_append_integration_obligation_note as append_note_api,
 )
@@ -68,6 +68,7 @@ from .generated.models.category_data_record_public import CategoryDataRecordPubl
 from .generated.models.category_data_records_public import CategoryDataRecordsPublic
 from .generated.models.category_data_schema_public import CategoryDataSchemaPublic
 from .generated.models.http_validation_error import HTTPValidationError
+from .generated.models.integration_conflict_response import IntegrationConflictResponse
 from .generated.models.integration_public import IntegrationPublic
 from .generated.models.integration_result import IntegrationResult
 from .generated.models.integration_run_error import IntegrationRunError
@@ -88,6 +89,8 @@ from .generated.types import UNSET
 
 
 def _result(value: Any) -> Any:
+    if isinstance(value, IntegrationConflictResponse):
+        raise OblidogConflictError(value.detail.code)
     if isinstance(value, HTTPValidationError):
         raise OblidogValidationError(str(value.to_dict()))
     if value is None:

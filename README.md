@@ -94,7 +94,16 @@ The caller owns run IDs, retries, scheduling and exception handling. Reuse the
 same ID and identical payload only when retrying that report. Do not auto-refresh
 revisions on conflicts or repeat completed work. Disabled instances cannot start
 new runs; timeout indicates missing completion, not a proven provider failure.
-The client performs no implicit retry. Errors retain existing exception behavior.
+The client performs no implicit retry. Registry conflicts raise
+`OblidogConflictError` (a subclass of `OblidogApiError`) with `status_code=409`
+and a typed `code: IntegrationConflictCode`. For example, inspect
+`exc.code == IntegrationConflictCode.REVISION_CONFLICT` when deciding whether
+to abandon a stale invocation; do not blindly refresh and retry it. Other
+errors retain existing exception behavior.
+
+`IntegrationPublic.current_deadline_at` exposes the deadline captured when a
+run starts. Later timeout configuration changes apply to future starts and do
+not revive an expired run.
 
 These methods require Ledger's integration registry API (stage 2 of issue #115).
 Deploy that backend before enabling reporting. This client update contains a

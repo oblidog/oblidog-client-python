@@ -6,10 +6,16 @@ from .client import (
     OblidogClient,
     ObligationsClient,
 )
-from .exceptions import OblidogApiError, OblidogError, OblidogValidationError
+from .exceptions import (
+    OblidogApiError,
+    OblidogConflictError,
+    OblidogError,
+    OblidogValidationError,
+)
 from .generated.models.category_data_record_public import CategoryDataRecordPublic
 from .generated.models.category_data_records_public import CategoryDataRecordsPublic
 from .generated.models.category_data_schema_public import CategoryDataSchemaPublic
+from .generated.models.integration_conflict_code import IntegrationConflictCode
 from .generated.models.integration_execution_state import IntegrationExecutionState
 from .generated.models.integration_health import IntegrationHealth
 from .generated.models.integration_public import IntegrationPublic
@@ -26,6 +32,7 @@ __all__ = [
     "CategoryDataRecordPublic",
     "CategoryDataRecordsPublic",
     "CategoryDataSchemaPublic",
+    "IntegrationConflictCode",
     "IntegrationExecutionState",
     "IntegrationHealth",
     "IntegrationPublic",
@@ -34,6 +41,7 @@ __all__ = [
     "IntegrationsClient",
     "OblidogApiError",
     "OblidogClient",
+    "OblidogConflictError",
     "OblidogError",
     "OblidogValidationError",
     "ObligationComponentPublic",

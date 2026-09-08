@@ -21,6 +21,7 @@ class IntegrationPublic:
     Attributes:
         category_ids (list[UUID]):
         created_at (datetime.datetime):
+        current_deadline_at (datetime.datetime | None):
         current_finished_at (datetime.datetime | None):
         current_run_id (None | UUID):
         current_started_at (datetime.datetime | None):
@@ -48,6 +49,7 @@ class IntegrationPublic:
 
     category_ids: list[UUID]
     created_at: datetime.datetime
+    current_deadline_at: datetime.datetime | None
     current_finished_at: datetime.datetime | None
     current_run_id: None | UUID
     current_started_at: datetime.datetime | None
@@ -80,6 +82,12 @@ class IntegrationPublic:
             category_ids.append(category_ids_item)
 
         created_at = self.created_at.isoformat()
+
+        current_deadline_at: None | str
+        if isinstance(self.current_deadline_at, datetime.datetime):
+            current_deadline_at = self.current_deadline_at.isoformat()
+        else:
+            current_deadline_at = self.current_deadline_at
 
         current_finished_at: None | str
         if isinstance(self.current_finished_at, datetime.datetime):
@@ -164,6 +172,7 @@ class IntegrationPublic:
             {
                 "category_ids": category_ids,
                 "created_at": created_at,
+                "current_deadline_at": current_deadline_at,
                 "current_finished_at": current_finished_at,
                 "current_run_id": current_run_id,
                 "current_started_at": current_started_at,
@@ -203,6 +212,21 @@ class IntegrationPublic:
             category_ids.append(category_ids_item)
 
         created_at = datetime.datetime.fromisoformat(d.pop("created_at"))
+
+        def _parse_current_deadline_at(data: object) -> datetime.datetime | None:
+            if data is None:
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                current_deadline_at_type_0 = datetime.datetime.fromisoformat(data)
+
+                return current_deadline_at_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(datetime.datetime | None, data)
+
+        current_deadline_at = _parse_current_deadline_at(d.pop("current_deadline_at"))
 
         def _parse_current_finished_at(data: object) -> datetime.datetime | None:
             if data is None:
@@ -361,6 +385,7 @@ class IntegrationPublic:
         integration_public = cls(
             category_ids=category_ids,
             created_at=created_at,
+            current_deadline_at=current_deadline_at,
             current_finished_at=current_finished_at,
             current_run_id=current_run_id,
             current_started_at=current_started_at,

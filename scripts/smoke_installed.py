@@ -5,6 +5,7 @@ import importlib.util
 from oblidog_client import (
     OblidogApiError,
     OblidogClient,
+    OblidogConflictError,
     OblidogError,
     OblidogValidationError,
 )
@@ -21,6 +22,11 @@ def main() -> None:
     if not issubclass(OblidogValidationError, OblidogError):
         raise SystemExit(
             "OblidogValidationError is not part of the public exception hierarchy"
+        )
+
+    if not issubclass(OblidogConflictError, OblidogApiError):
+        raise SystemExit(
+            "OblidogConflictError is not part of the public API exception hierarchy"
         )
 
     client = OblidogClient(

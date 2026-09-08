@@ -9,6 +9,7 @@ EXPECTED_PUBLIC_API = {
     "IntegrationRunError",
     "IntegrationResult",
     "IntegrationHealth",
+    "IntegrationConflictCode",
     "IntegrationExecutionState",
     "IntegrationsClient",
     "CategoryDataClient",
@@ -23,6 +24,7 @@ EXPECTED_PUBLIC_API = {
     "ObligationsPublic",
     "OblidogApiError",
     "OblidogClient",
+    "OblidogConflictError",
     "OblidogError",
     "OblidogValidationError",
 }

@@ -189,6 +189,41 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "IntegrationConflictCode": {
+        "enum": [
+          "duplicate_key",
+          "revision_conflict",
+          "integration_disabled",
+          "run_in_progress",
+          "run_conflict"
+        ],
+        "title": "IntegrationConflictCode",
+        "type": "string"
+      },
+      "IntegrationConflictDetail": {
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/IntegrationConflictCode"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "IntegrationConflictDetail",
+        "type": "object"
+      },
+      "IntegrationConflictResponse": {
+        "properties": {
+          "detail": {
+            "$ref": "#/components/schemas/IntegrationConflictDetail"
+          }
+        },
+        "required": [
+          "detail"
+        ],
+        "title": "IntegrationConflictResponse",
+        "type": "object"
+      },
       "IntegrationExecutionState": {
         "enum": [
           "never_run",
@@ -226,6 +261,18 @@
             "format": "date-time",
             "title": "Created At",
             "type": "string"
+          },
+          "current_deadline_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Deadline At"
           },
           "current_finished_at": {
             "anyOf": [
@@ -412,6 +459,7 @@
           "revision",
           "current_run_id",
           "current_started_at",
+          "current_deadline_at",
           "current_finished_at",
           "last_finished_at",
           "last_result",
@@ -1480,6 +1528,16 @@
             },
             "description": "Successful Response"
           },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationConflictResponse"
+                }
+              }
+            },
+            "description": "Integration run conflict"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -1538,6 +1596,16 @@
               }
             },
             "description": "Successful Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationConflictResponse"
+                }
+              }
+            },
+            "description": "Integration run conflict"
           },
           "422": {
             "content": {

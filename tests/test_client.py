@@ -310,6 +310,7 @@ INTEGRATION = {
     "revision": 0,
     "current_run_id": None,
     "current_started_at": None,
+    "current_deadline_at": None,
     "current_finished_at": None,
     "last_finished_at": None,
     "last_result": None,
@@ -348,6 +349,7 @@ def test_integration_get_and_start_use_shared_auth_and_caller_run_identity() -> 
                 **INTEGRATION,
                 "current_run_id": str(run_id),
                 "current_started_at": "2026-09-08T09:00:00Z",
+                "current_deadline_at": "2026-09-08T09:30:00Z",
                 "revision": 1,
                 "execution_state": "running",
                 "health": "running",
@@ -363,6 +365,9 @@ def test_integration_get_and_start_use_shared_auth_and_caller_run_identity() -> 
             )
             assert started.current_run_id == run_id
             assert started.revision == 1
+            assert started.current_deadline_at == datetime.datetime(
+                2026, 9, 8, 9, 30, tzinfo=datetime.UTC
+            )
     assert len(requests) == 3
     assert requests[1].content == requests[2].content
 
@@ -447,7 +452,7 @@ def test_integration_failure_sends_sanitized_error() -> None:
         assert result.last_result == IntegrationResult.FAILURE
 
 
-@pytest.mark.parametrize("status", [401, 403, 404, 409, 500])
+@pytest.mark.parametrize("status", [401, 403, 404, 500])
 def test_integration_reporting_propagates_errors_without_retry(status: int) -> None:
     import uuid
 
@@ -487,3 +492,83 @@ def test_integration_validation_error_is_public_exception() -> None:
         pytest.raises(OblidogValidationError),
     ):
         client.integrations.start("nju-mario", run_id=uuid.uuid4(), expected_revision=0)
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        "duplicate_key",
+        "revision_conflict",
+        "integration_disabled",
+        "run_in_progress",
+        "run_conflict",
+    ],
+)
+@pytest.mark.parametrize("operation", ["start", "finish"])
+def test_integration_conflict_is_typed_exception_without_retry(
+    code: str, operation: str
+) -> None:
+    import uuid
+
+    from oblidog_client import (
+        IntegrationConflictCode,
+        IntegrationResult,
+        OblidogConflictError,
+    )
+
+    calls = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        assert_auth(request)
+        assert request.url.path.endswith("/" + operation)
+        return httpx.Response(409, json={"detail": {"code": code}})
+
+    with make_client(httpx.MockTransport(handler)) as client:
+        with pytest.raises(OblidogConflictError) as exc:
+            if operation == "start":
+                client.integrations.start(
+                    "nju-mario", run_id=uuid.uuid4(), expected_revision=0
+                )
+            else:
+                client.integrations.finish(
+                    "nju-mario",
+                    run_id=uuid.uuid4(),
+                    result=IntegrationResult.SUCCESS,
+                    changes_detected=False,
+                )
+        assert isinstance(exc.value, OblidogApiError)
+        assert exc.value.status_code == 409
+        assert exc.value.code is IntegrationConflictCode(code)
+        assert json.loads(exc.value.content) == {"detail": {"code": code}}
+    assert calls == 1
+
+
+def test_low_level_client_parses_documented_conflict() -> None:
+    import uuid
+
+    from oblidog_client import IntegrationConflictCode
+    from oblidog_client.generated.api.integration import (
+        integration_start_integration_run,
+    )
+    from oblidog_client.generated.models.integration_conflict_response import (
+        IntegrationConflictResponse,
+    )
+    from oblidog_client.generated.models.integration_run_start import (
+        IntegrationRunStart,
+    )
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert_auth(request)
+        return httpx.Response(409, json={"detail": {"code": "revision_conflict"}})
+
+    with make_client(httpx.MockTransport(handler)) as client:
+        response = integration_start_integration_run.sync_detailed(
+            "nju-mario",
+            client=client._client,
+            body=IntegrationRunStart(run_id=uuid.uuid4(), expected_revision=0),
+        )
+        assert response.status_code == 409
+        assert isinstance(response.parsed, IntegrationConflictResponse)
+        assert response.parsed.detail.code is IntegrationConflictCode.REVISION_CONFLICT

@@ -1,3 +1,8 @@
+import json
+
+from .generated.models.integration_conflict_code import IntegrationConflictCode
+
+
 class OblidogError(Exception):
     """Base exception raised by the high-level Oblidog client."""
 
@@ -17,3 +22,11 @@ class OblidogApiError(OblidogError):
 
 class OblidogValidationError(OblidogError):
     """The Oblidog API rejected request parameters or payload."""
+
+
+class OblidogConflictError(OblidogApiError):
+    """A registry operation conflicted with the current state or revision."""
+
+    def __init__(self, code: IntegrationConflictCode) -> None:
+        self.code = code
+        super().__init__(409, json.dumps({"detail": {"code": code.value}}).encode())
