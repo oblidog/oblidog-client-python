@@ -153,6 +153,49 @@
         ],
         "type": "object"
       },
+      "CounterpartySummaryPublic": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "logo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Url"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "short_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Short Name"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "short_name",
+          "logo_url"
+        ],
+        "title": "CounterpartySummaryPublic",
+        "type": "object"
+      },
       "CurrentValueSource": {
         "enum": [
           "unknown",
@@ -950,6 +993,28 @@
             "title": "Category Id",
             "type": "string"
           },
+          "counterparty": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CounterpartySummaryPublic"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "counterparty_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Counterparty Id"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -1074,6 +1139,8 @@
           "id",
           "ledger_id",
           "category_id",
+          "counterparty_id",
+          "counterparty",
           "category_code",
           "key",
           "name",
