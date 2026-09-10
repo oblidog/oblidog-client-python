@@ -8,6 +8,7 @@ from .category_data_records_public import CategoryDataRecordsPublic
 from .category_data_schema_public import CategoryDataSchemaPublic
 from .category_data_schema_public_schema import CategoryDataSchemaPublicSchema
 from .context import Context
+from .counterparty_summary_public import CounterpartySummaryPublic
 from .current_value_source import CurrentValueSource
 from .effective_value_source_mode import EffectiveValueSourceMode
 from .http_validation_error import HTTPValidationError
@@ -50,6 +51,7 @@ __all__ = (
     "CategoryDataSchemaPublic",
     "CategoryDataSchemaPublicSchema",
     "Context",
+    "CounterpartySummaryPublic",
     "CurrentValueSource",
     "EffectiveValueSourceMode",
     "HTTPValidationError",
