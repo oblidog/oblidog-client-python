@@ -1,29 +1,27 @@
 from http import HTTPStatus
 from typing import Any
-from urllib.parse import quote
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.category_data_record_create import CategoryDataRecordCreate
 from ...models.category_data_record_public import CategoryDataRecordPublic
 from ...models.http_validation_error import HTTPValidationError
+from ...models.integration_category_data_record_create import (
+    IntegrationCategoryDataRecordCreate,
+)
 from ...types import Response
 
 
 def _get_kwargs(
-    category_code: str,
     *,
-    body: CategoryDataRecordCreate,
+    body: IntegrationCategoryDataRecordCreate,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": "/api/v1/integration/categories/{category_code}/data-records".format(
-            category_code=quote(str(category_code), safe=""),
-        ),
+        "url": "/api/v1/integration/category/data-records",
     }
 
     _kwargs["json"] = body.to_dict()
@@ -65,16 +63,15 @@ def _build_response(
 
 
 def sync_detailed(
-    category_code: str,
     *,
     client: AuthenticatedClient,
-    body: CategoryDataRecordCreate,
+    body: IntegrationCategoryDataRecordCreate,
 ) -> Response[CategoryDataRecordPublic | HTTPValidationError]:
     """Create Integration Category Data Record
 
     Args:
-        category_code (str):
-        body (CategoryDataRecordCreate):
+        body (IntegrationCategoryDataRecordCreate): A category observation submitted by its
+            authenticated integration.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -85,7 +82,6 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
-        category_code=category_code,
         body=body,
     )
 
@@ -97,16 +93,15 @@ def sync_detailed(
 
 
 def sync(
-    category_code: str,
     *,
     client: AuthenticatedClient,
-    body: CategoryDataRecordCreate,
+    body: IntegrationCategoryDataRecordCreate,
 ) -> CategoryDataRecordPublic | HTTPValidationError | None:
     """Create Integration Category Data Record
 
     Args:
-        category_code (str):
-        body (CategoryDataRecordCreate):
+        body (IntegrationCategoryDataRecordCreate): A category observation submitted by its
+            authenticated integration.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -117,23 +112,21 @@ def sync(
     """
 
     return sync_detailed(
-        category_code=category_code,
         client=client,
         body=body,
     ).parsed
 
 
 async def asyncio_detailed(
-    category_code: str,
     *,
     client: AuthenticatedClient,
-    body: CategoryDataRecordCreate,
+    body: IntegrationCategoryDataRecordCreate,
 ) -> Response[CategoryDataRecordPublic | HTTPValidationError]:
     """Create Integration Category Data Record
 
     Args:
-        category_code (str):
-        body (CategoryDataRecordCreate):
+        body (IntegrationCategoryDataRecordCreate): A category observation submitted by its
+            authenticated integration.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -144,7 +137,6 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
-        category_code=category_code,
         body=body,
     )
 
@@ -154,16 +146,15 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    category_code: str,
     *,
     client: AuthenticatedClient,
-    body: CategoryDataRecordCreate,
+    body: IntegrationCategoryDataRecordCreate,
 ) -> CategoryDataRecordPublic | HTTPValidationError | None:
     """Create Integration Category Data Record
 
     Args:
-        category_code (str):
-        body (CategoryDataRecordCreate):
+        body (IntegrationCategoryDataRecordCreate): A category observation submitted by its
+            authenticated integration.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -175,7 +166,6 @@ async def asyncio(
 
     return (
         await asyncio_detailed(
-            category_code=category_code,
             client=client,
             body=body,
         )

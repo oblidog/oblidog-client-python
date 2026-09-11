@@ -1,6 +1,5 @@
 from http import HTTPStatus
 from typing import Any
-from urllib.parse import quote
 
 import httpx
 
@@ -14,7 +13,6 @@ from ...types import Response
 
 
 def _get_kwargs(
-    integration_key: str,
     *,
     body: IntegrationRunStart,
 ) -> dict[str, Any]:
@@ -22,9 +20,7 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": "/api/v1/integration/instances/{integration_key}/start".format(
-            integration_key=quote(str(integration_key), safe=""),
-        ),
+        "url": "/api/v1/integration/runs/start",
     }
 
     _kwargs["json"] = body.to_dict()
@@ -71,7 +67,6 @@ def _build_response(
 
 
 def sync_detailed(
-    integration_key: str,
     *,
     client: AuthenticatedClient,
     body: IntegrationRunStart,
@@ -79,7 +74,6 @@ def sync_detailed(
     """Start Integration Run
 
     Args:
-        integration_key (str):
         body (IntegrationRunStart):
 
     Raises:
@@ -91,7 +85,6 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
-        integration_key=integration_key,
         body=body,
     )
 
@@ -103,7 +96,6 @@ def sync_detailed(
 
 
 def sync(
-    integration_key: str,
     *,
     client: AuthenticatedClient,
     body: IntegrationRunStart,
@@ -111,7 +103,6 @@ def sync(
     """Start Integration Run
 
     Args:
-        integration_key (str):
         body (IntegrationRunStart):
 
     Raises:
@@ -123,14 +114,12 @@ def sync(
     """
 
     return sync_detailed(
-        integration_key=integration_key,
         client=client,
         body=body,
     ).parsed
 
 
 async def asyncio_detailed(
-    integration_key: str,
     *,
     client: AuthenticatedClient,
     body: IntegrationRunStart,
@@ -138,7 +127,6 @@ async def asyncio_detailed(
     """Start Integration Run
 
     Args:
-        integration_key (str):
         body (IntegrationRunStart):
 
     Raises:
@@ -150,7 +138,6 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
-        integration_key=integration_key,
         body=body,
     )
 
@@ -160,7 +147,6 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    integration_key: str,
     *,
     client: AuthenticatedClient,
     body: IntegrationRunStart,
@@ -168,7 +154,6 @@ async def asyncio(
     """Start Integration Run
 
     Args:
-        integration_key (str):
         body (IntegrationRunStart):
 
     Raises:
@@ -181,7 +166,6 @@ async def asyncio(
 
     return (
         await asyncio_detailed(
-            integration_key=integration_key,
             client=client,
             body=body,
         )

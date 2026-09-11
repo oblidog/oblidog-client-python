@@ -7,15 +7,17 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
+from ...models.integration_obligation_component_upsert import (
+    IntegrationObligationComponentUpsert,
+)
 from ...models.obligation_component_public import ObligationComponentPublic
-from ...models.obligation_component_upsert import ObligationComponentUpsert
 from ...types import Response
 
 
 def _get_kwargs(
     obligation_key: str,
     *,
-    body: ObligationComponentUpsert,
+    body: IntegrationObligationComponentUpsert,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -68,13 +70,14 @@ def sync_detailed(
     obligation_key: str,
     *,
     client: AuthenticatedClient,
-    body: ObligationComponentUpsert,
+    body: IntegrationObligationComponentUpsert,
 ) -> Response[HTTPValidationError | ObligationComponentPublic]:
     """Upsert Integration Obligation Component
 
     Args:
         obligation_key (str):
-        body (ObligationComponentUpsert):
+        body (IntegrationObligationComponentUpsert): An obligation component identified within its
+            authenticated integration.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -100,13 +103,14 @@ def sync(
     obligation_key: str,
     *,
     client: AuthenticatedClient,
-    body: ObligationComponentUpsert,
+    body: IntegrationObligationComponentUpsert,
 ) -> HTTPValidationError | ObligationComponentPublic | None:
     """Upsert Integration Obligation Component
 
     Args:
         obligation_key (str):
-        body (ObligationComponentUpsert):
+        body (IntegrationObligationComponentUpsert): An obligation component identified within its
+            authenticated integration.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -127,13 +131,14 @@ async def asyncio_detailed(
     obligation_key: str,
     *,
     client: AuthenticatedClient,
-    body: ObligationComponentUpsert,
+    body: IntegrationObligationComponentUpsert,
 ) -> Response[HTTPValidationError | ObligationComponentPublic]:
     """Upsert Integration Obligation Component
 
     Args:
         obligation_key (str):
-        body (ObligationComponentUpsert):
+        body (IntegrationObligationComponentUpsert): An obligation component identified within its
+            authenticated integration.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -157,13 +162,14 @@ async def asyncio(
     obligation_key: str,
     *,
     client: AuthenticatedClient,
-    body: ObligationComponentUpsert,
+    body: IntegrationObligationComponentUpsert,
 ) -> HTTPValidationError | ObligationComponentPublic | None:
     """Upsert Integration Obligation Component
 
     Args:
         obligation_key (str):
-        body (ObligationComponentUpsert):
+        body (IntegrationObligationComponentUpsert): An obligation component identified within its
+            authenticated integration.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
