@@ -372,7 +372,13 @@ def test_integration_run_fetches_context_then_starts_and_finishes() -> None:
         requests.append(request)
         assert_auth(request)
         if request.url.path == "/api/v1/integration/context":
-            return httpx.Response(200, json={"revision": 4, "provider": "nju"})
+            return httpx.Response(
+                200,
+                json={
+                    "integration": {"revision": 4},
+                    "provider": "nju",
+                },
+            )
         body = json.loads(request.content)
         if request.url.path == "/api/v1/integration/runs/start":
             assert body["expected_revision"] == 4
@@ -399,6 +405,39 @@ def test_integration_run_fetches_context_then_starts_and_finishes() -> None:
         "/api/v1/integration/runs/start",
         "/api/v1/integration/runs/finish",
     ]
+
+
+@pytest.mark.parametrize(
+    ("context", "error"),
+    [
+        ({}, "integration context must contain an 'integration' object"),
+        (
+            {"integration": {}},
+            "integration context integration.revision must be an integer",
+        ),
+        (
+            {"integration": {"revision": "4"}},
+            "integration context integration.revision must be an integer",
+        ),
+        (
+            {"integration": {"revision": True}},
+            "integration context integration.revision must be an integer",
+        ),
+    ],
+)
+def test_integration_run_rejects_invalid_nested_context(
+    context: dict[str, object], error: str
+) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert_auth(request)
+        assert request.url.path == "/api/v1/integration/context"
+        return httpx.Response(200, json=context)
+
+    with (
+        make_client(httpx.MockTransport(handler)) as client,
+        pytest.raises(TypeError, match=error),
+    ):
+        client.integrations.run()
 
 
 @pytest.mark.parametrize("changes", [True, False, None])
