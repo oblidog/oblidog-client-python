@@ -14,8 +14,56 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  prepare-release:
+  finalize-release-tag:
     if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    outputs:
+      ready: ${{ steps.state.outputs.ready }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Sync locked dependencies
+        run: uv sync --all-groups --locked
+
+      - name: Create tag for a merged release pull request
+        id: state
+        shell: bash
+        run: |
+          current_version="$(uv run cz version -p)"
+          release_tag="v${current_version}"
+
+          if git rev-parse -q --verify "refs/tags/${release_tag}" >/dev/null; then
+            echo "${release_tag} already exists."
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if ! git log -1 --format=%s | grep -Eq "^bump: version .+ → ${current_version}( \\(#[0-9]+\\))?$"; then
+            echo "${release_tag} is not tagged, but HEAD is not a merged release bump."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag --annotate "${release_tag}" --message "Release ${release_tag}"
+          git push origin "${release_tag}"
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+
+  prepare-release:
+    needs: finalize-release-tag
+    if: needs.finalize-release-tag.outputs.ready == 'true' && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -34,20 +82,7 @@ jobs:
       - name: Sync locked dependencies
         run: uv sync --all-groups --locked
 
-      - name: Check initial release is finalized
-        id: state
-        shell: bash
-        run: |
-          current_version="$(uv run cz version -p)"
-          if ! git rev-parse -q --verify "refs/tags/v${current_version}" >/dev/null; then
-            echo "v${current_version} is not tagged; create the initial release first."
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          echo "ready=true" >> "$GITHUB_OUTPUT"
-
       - name: Determine next version
-        if: steps.state.outputs.ready == 'true'
         id: version
         shell: bash
         run: |
