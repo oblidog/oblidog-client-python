@@ -808,7 +808,7 @@ wheels = [
 
 [[package]]
 name = "oblidog-client"
-version = "0.1.0rc1"
+version = "0.1.1rc1"
 source = { editable = "." }
 dependencies = [
     { name = "attrs" },
@@ -820,6 +820,7 @@ dependencies = [
 dev = [
     { name = "commitizen" },
     { name = "openapi-python-client" },
+    { name = "packaging" },
     { name = "pytest" },
     { name = "ruff" },
     { name = "twine" },
@@ -840,6 +841,7 @@ requires-dist = [
 dev = [
     { name = "commitizen", specifier = ">=4.18.0" },
     { name = "openapi-python-client", specifier = ">=0.25" },
+    { name = "packaging", specifier = ">=24" },
     { name = "pytest", specifier = ">=8.0" },
     { name = "ruff", specifier = ">=0.6" },
     { name = "twine", specifier = ">=6.1" },

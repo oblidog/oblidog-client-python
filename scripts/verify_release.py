@@ -8,27 +8,50 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-Version = tuple[int, int, int]
+from packaging.version import InvalidVersion, Version
 
-TAG_PATTERN = re.compile(r"^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$")
 INDEXES = {
     "pypi": "https://pypi.org",
     "testpypi": "https://test.pypi.org",
 }
+RELEASE_VERSION_PATTERN = re.compile(
+    r"(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:(?:a|b|rc)(?:0|[1-9]\d*))?"
+)
 
 
 def parse_version(value: str) -> Version | None:
-    match = re.fullmatch(r"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)", value)
-    if match is None:
+    try:
+        return Version(value)
+    except InvalidVersion:
         return None
-    return tuple(map(int, match.groups()))
+
+
+def parse_release_version(value: str) -> Version | None:
+    if RELEASE_VERSION_PATTERN.fullmatch(value) is None:
+        return None
+    version = parse_version(value)
+    if version is None:
+        return None
+    if (
+        str(version) != value
+        or version.epoch != 0
+        or version.local is not None
+        or version.post is not None
+        or version.dev is not None
+    ):
+        return None
+    return version
 
 
 def parse_release_tag(tag: str) -> Version:
-    match = TAG_PATTERN.fullmatch(tag)
-    if match is None:
-        raise SystemExit(f"Release tag must use the exact vX.Y.Z form, got {tag!r}")
-    return tuple(map(int, match.groups()))
+    version = (
+        parse_release_version(tag.removeprefix("v")) if tag.startswith("v") else None
+    )
+    if version is None:
+        raise SystemExit(
+            f"Release tag must use canonical vX.Y.Z or vX.Y.ZrcN form, got {tag!r}"
+        )
+    return version
 
 
 def published_versions(index_url: str, project_name: str) -> list[Version]:
@@ -59,10 +82,11 @@ def verify_release(
 
     project = tomllib.loads(project_file.read_text())["project"]
     project_version_text = project["version"]
-    project_version = parse_version(project_version_text)
+    project_version = parse_release_version(project_version_text)
     if project_version is None:
         raise SystemExit(
-            f"Project version must use the exact X.Y.Z form, got {project_version_text!r}"
+            "Project version must use canonical X.Y.Z or X.Y.ZrcN form, "
+            f"got {project_version_text!r}"
         )
 
     tag_version = parse_release_tag(tag)
@@ -74,7 +98,7 @@ def verify_release(
     if existing_versions is None:
         existing_versions = published_versions(INDEXES[target], project["name"])
     if existing_versions and project_version <= max(existing_versions):
-        latest = ".".join(map(str, max(existing_versions)))
+        latest = str(max(existing_versions))
         raise SystemExit(
             f"Version {project_version_text} is not newer than {latest} on {target}"
         )
@@ -84,7 +108,7 @@ def verify_release(
 
 def main() -> None:
     if len(sys.argv) != 3:
-        raise SystemExit("Usage: verify_release.py vX.Y.Z pypi|testpypi")
+        raise SystemExit("Usage: verify_release.py vX.Y.Z|vX.Y.ZrcN pypi|testpypi")
     project_root = Path(__file__).resolve().parent.parent
     verify_release(
         sys.argv[1],

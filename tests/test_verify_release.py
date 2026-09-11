@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+from packaging.version import Version
 
 from scripts.verify_release import parse_release_tag, verify_release
 
@@ -20,6 +21,15 @@ def test_release_tag_matches_new_project_version(tmp_path: Path) -> None:
     )
 
 
+def test_prerelease_tag_matches_prerelease_project_version(tmp_path: Path) -> None:
+    verify_release(
+        "v0.1.1rc1",
+        "testpypi",
+        project_file=project_file(tmp_path, version="0.1.1rc1"),
+        existing_versions=[Version("0.1.0")],
+    )
+
+
 def test_release_tag_must_match_project_version(tmp_path: Path) -> None:
     with pytest.raises(SystemExit, match="does not match"):
         verify_release(
@@ -30,9 +40,11 @@ def test_release_tag_must_match_project_version(tmp_path: Path) -> None:
         )
 
 
-@pytest.mark.parametrize("tag", ["0.1.0", "v0.1", "v01.1.0", "v0.1.0-rc1"])
-def test_release_tag_requires_exact_stable_semver(tag: str) -> None:
-    with pytest.raises(SystemExit, match="exact vX.Y.Z"):
+@pytest.mark.parametrize(
+    "tag", ["0.1.0", "v0.1", "v01.1.0", "v0.1.0-rc1", "v0.1.0rc01"]
+)
+def test_release_tag_requires_canonical_release_or_prerelease_version(tag: str) -> None:
+    with pytest.raises(SystemExit, match="canonical vX.Y.Z or vX.Y.ZrcN"):
         parse_release_tag(tag)
 
 
@@ -42,7 +54,17 @@ def test_release_version_must_be_newer_than_index(tmp_path: Path) -> None:
             "v0.1.0",
             "pypi",
             project_file=project_file(tmp_path),
-            existing_versions=[(0, 1, 0)],
+            existing_versions=[Version("0.1.0")],
+        )
+
+
+def test_prerelease_must_be_newer_than_existing_stable_version(tmp_path: Path) -> None:
+    with pytest.raises(SystemExit, match="not newer"):
+        verify_release(
+            "v0.1.0rc1",
+            "testpypi",
+            project_file=project_file(tmp_path, version="0.1.0rc1"),
+            existing_versions=[Version("0.1.0")],
         )
 
 

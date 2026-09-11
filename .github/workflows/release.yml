@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: Existing vX.Y.Z tag to publish to TestPyPI
+        description: Existing vX.Y.Z or vX.Y.ZrcN tag to publish to TestPyPI
         required: true
         type: string
       target:
