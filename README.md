@@ -2,7 +2,9 @@
 
 Python client for the Oblidog integration API.
 
-The generated OpenAPI client lives under `oblidog_client.generated` and is treated as an implementation detail. Integrations should normally use the handwritten `OblidogClient` facade.
+Use the handwritten `OblidogClient` facade in application code. The
+`oblidog_client.generated` namespace is OpenAPI-generated transport code and is
+an implementation detail, not the recommended SDK API.
 
 ## Installation
 
@@ -15,100 +17,28 @@ pip install oblidog-client
 ```python
 import datetime
 
-from oblidog_client import OblidogClient, ObligationLifecycle
+from oblidog_client import OblidogClient
 
-with OblidogClient(
-    base_url="https://oblidog.example.com",
-    api_key="fdg_live_...",
-) as client:
-    obligations = client.obligations.list(
-        year=2026,
-        month=8,
-        lifecycle=ObligationLifecycle.READY,
-    )
-
-    obligation = client.obligations.update(
-        "ENRG-2026-08",
-        current_amount="425.30",
-    )
-    client.obligations.append_note(
-        obligation.key,
-        "Imported invoice FV/123/2026",
-    )
-    client.obligations.mark_ready(obligation.key)
-
-    client.obligations.upsert_component(
-        obligation.key,
-        type="principal",
-        label="August electricity",
-        amount="425.30",
-        metadata={"invoice_number": "FV/123/2026"},
-    )
-    components = client.obligations.list_components(obligation.key)
-
-    record = client.category_data.create(
-        "ENRG",
-        observed_at=datetime.datetime(2026, 8, 1, tzinfo=datetime.UTC),
-        data={"meter_reading_kwh": 1234.5},
-        source="utility-import",
-    )
-    latest_record = client.category_data.latest("ENRG")
-```
-
-Category data operations are `schema`, `list`, `latest`, and `create`. Available obligation operations are `list`, `get`, `update`, `append_note`, `list_components`, `upsert_component`, `mark_ready`, `mark_paid`, `cancel`, `reopen`, and `mark_error`.
-
-Unexpected HTTP statuses raise `OblidogApiError`/the generated transport exception rather than silently returning `None`. Validation responses are surfaced as `OblidogValidationError`.
-
-## Integration health reporting
-
-`client.integrations.get`, `start`, and `finish` use the same ledger API key as
-business-data operations. The instance must first be registered by the ledger
-owner. Reading needs `ledger:read`; reporting needs `ledger:write`.
-
-```python
-import uuid
-from oblidog_client import IntegrationResult
-
-# Use this inside the OblidogClient context shown above.
-instance = client.integrations.get("nju-mario")
-run_id = uuid.uuid4()
-if instance.enabled:
-    started = client.integrations.start(
-        instance.key, run_id=run_id, expected_revision=instance.revision,
-    )
-    if started.current_run_id == run_id and started.current_finished_at is None:
-        # Perform the provider check and all intended synchronization here.
-        # Only after they succeed, report the actual change signal:
-        client.integrations.finish(
-            instance.key, run_id=run_id,
-            result=IntegrationResult.SUCCESS, changes_detected=False,
+with OblidogClient(base_url="https://oblidog.example.com", api_key="fdg_live_...") as client:
+    with client.integrations.run() as run:
+        client.category_data.create(
+            observed_at=datetime.datetime.now(datetime.UTC),
+            data={"meter_reading_kwh": 1234.5},
         )
+        run.finish_success(changes_detected=True)
 ```
 
-A successful no-op uses `changes_detected=False`; use `None` if unknown. On a
-provider/synchronization failure, finish with `IntegrationResult.FAILURE` and
-`IntegrationRunError(code="provider_failed", message="Provider unavailable")`.
-Keep messages sanitized; details and tracebacks belong in local logs.
+The integration API key selects its integration and category. Use
+`client.integrations.run()` around synchronization work: it reads context and
+starts a run before the block, then reports a sanitized failure if the block
+raises.
 
-The caller owns run IDs, retries, scheduling and exception handling. Reuse the
-same ID and identical payload only when retrying that report. Do not auto-refresh
-revisions on conflicts or repeat completed work. Disabled instances cannot start
-new runs; timeout indicates missing completion, not a proven provider failure.
-The client performs no implicit retry. Registry conflicts raise
-`OblidogConflictError` (a subclass of `OblidogApiError`) with `status_code=409`
-and a typed `code: IntegrationConflictCode`. For example, inspect
-`exc.code == IntegrationConflictCode.REVISION_CONFLICT` when deciding whether
-to abandon a stale invocation; do not blindly refresh and retry it. Other
-errors retain existing exception behavior.
+## Documentation
 
-`IntegrationPublic.current_deadline_at` exposes the deadline captured when a
-run starts. Later timeout configuration changes apply to future starts and do
-not revive an expired run.
-
-These methods require Ledger's integration registry API (stage 2 of issue #115).
-Deploy that backend before enabling reporting. This client update contains a
-contract generated from the corresponding Ledger implementation; no release or
-publication is performed by the update itself.
+The full documentation is published at
+[oblidog.github.io/oblidog-client-python](https://oblidog.github.io/oblidog-client-python/).
+It includes a quickstart, public API reference, and supported API boundary; it
+intentionally excludes generated endpoints and transport classes.
 
 ## Development
 

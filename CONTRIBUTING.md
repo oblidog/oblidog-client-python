@@ -28,8 +28,13 @@ uv sync --all-groups
 uv run ruff check src tests
 uv run ruff format --check src tests
 uv run pytest -q
+uv run --group docs mkdocs build --strict
+uv run --group docs mkdocs serve
 python -m compileall -q src/oblidog_client
 uv build
 ```
 
 Generated code is excluded from handwritten Ruff checks and is instead validated by compilation and package build.
+
+Use `mkdocs serve` to preview the documentation locally; it watches the source
+files and prints the local URL.

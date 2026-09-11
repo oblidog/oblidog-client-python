@@ -1,0 +1,40 @@
+site_name: Oblidog Python Client
+site_description: Supported Python SDK facade for Oblidog integrations.
+site_url: https://oblidog.github.io/oblidog-client-python/
+repo_name: oblidog/oblidog-client-python
+repo_url: https://github.com/oblidog/oblidog-client-python
+
+theme:
+  name: material
+  language: en
+  features:
+    - content.code.copy
+    - navigation.footer
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_source: false
+            show_root_heading: true
+            show_root_full_path: false
+            members_order: source
+            filters:
+              - "!^_"
+
+markdown_extensions:
+  - admonition
+  - pymdownx.superfences
+  - pymdownx.highlight
+
+nav:
+  - Overview: index.md
+  - Installation and quickstart: getting-started.md
+  - API reference:
+      - Client and runs: reference/client.md
+      - Obligations: reference/obligations.md
+      - Category data: reference/category-data.md
+      - Models and enums: reference/models.md
+      - Exceptions: reference/exceptions.md

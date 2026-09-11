@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+import logging
 import uuid
 from typing import Any, Self
 
@@ -33,7 +34,7 @@ from .generated.api.integration import (
     integration_read_integration_category_data_schema as schema_category_data_api,
 )
 from .generated.api.integration import (
-    integration_read_integration_instance as get_instance_api,
+    integration_read_integration_context as read_context_api,
 )
 from .generated.api.integration import (
     integration_read_integration_obligation as get_api,
@@ -60,25 +61,30 @@ from .generated.api.integration import (
     integration_upsert_integration_obligation_component as upsert_component_api,
 )
 from .generated.client import AuthenticatedClient
-from .generated.models.category_data_record_create import CategoryDataRecordCreate
-from .generated.models.category_data_record_create_data import (
-    CategoryDataRecordCreateData,
-)
 from .generated.models.category_data_record_public import CategoryDataRecordPublic
 from .generated.models.category_data_records_public import CategoryDataRecordsPublic
 from .generated.models.category_data_schema_public import CategoryDataSchemaPublic
+from .generated.models.context import Context
 from .generated.models.http_validation_error import HTTPValidationError
+from .generated.models.integration_category_data_record_create import (
+    IntegrationCategoryDataRecordCreate,
+)
+from .generated.models.integration_category_data_record_create_data import (
+    IntegrationCategoryDataRecordCreateData,
+)
 from .generated.models.integration_conflict_response import IntegrationConflictResponse
+from .generated.models.integration_obligation_component_upsert import (
+    IntegrationObligationComponentUpsert,
+)
+from .generated.models.integration_obligation_component_upsert_metadata_type_0 import (
+    IntegrationObligationComponentUpsertMetadataType0,
+)
 from .generated.models.integration_public import IntegrationPublic
 from .generated.models.integration_result import IntegrationResult
 from .generated.models.integration_run_error import IntegrationRunError
 from .generated.models.integration_run_finish import IntegrationRunFinish
 from .generated.models.integration_run_start import IntegrationRunStart
 from .generated.models.obligation_component_public import ObligationComponentPublic
-from .generated.models.obligation_component_upsert import ObligationComponentUpsert
-from .generated.models.obligation_component_upsert_metadata_type_0 import (
-    ObligationComponentUpsertMetadataType0,
-)
 from .generated.models.obligation_components_public import ObligationComponentsPublic
 from .generated.models.obligation_integration_update import ObligationIntegrationUpdate
 from .generated.models.obligation_lifecycle import ObligationLifecycle
@@ -86,6 +92,8 @@ from .generated.models.obligation_note_append import ObligationNoteAppend
 from .generated.models.obligation_public import ObligationPublic
 from .generated.models.obligations_public import ObligationsPublic
 from .generated.types import UNSET
+
+logger = logging.getLogger(__name__)
 
 
 def _result(value: Any) -> Any:
@@ -99,7 +107,12 @@ def _result(value: Any) -> Any:
 
 
 class ObligationsClient:
-    """High-level synchronous operations for integration obligations."""
+    """High-level synchronous operations for obligations owned by this integration.
+
+    All methods use the category and integration associated with the API key.
+    Documented validation responses raise :class:`OblidogValidationError`; API
+    conflicts raise :class:`OblidogConflictError` where supported.
+    """
 
     def __init__(self, client: AuthenticatedClient) -> None:
         self._client = client
@@ -109,22 +122,41 @@ class ObligationsClient:
         *,
         year: int | None = None,
         month: int | None = None,
-        category_code: str | None = None,
         lifecycle: ObligationLifecycle | None = None,
     ) -> ObligationsPublic:
+        """List obligations visible to the authenticated integration.
+
+        Args:
+            year: Restrict results to a calendar year.
+            month: Restrict results to a calendar month (1 through 12).
+            lifecycle: Restrict results to one lifecycle state.
+
+        Returns:
+            A page-like collection of matching obligations.
+
+        Raises:
+            OblidogValidationError: If a supplied filter is invalid.
+            OblidogApiError: If the API returns no parsed response.
+        """
         result = list_api.sync(
             client=self._client,
             year=year if year is not None else UNSET,
             month=month if month is not None else UNSET,
-            category_code=category_code if category_code is not None else UNSET,
             lifecycle=lifecycle if lifecycle is not None else UNSET,
         )
         return _result(result)
 
     def get(self, obligation_key: str) -> ObligationPublic:
+        """Return one obligation by its stable integration key.
+
+        Raises:
+            OblidogValidationError: If the key is invalid.
+            OblidogApiError: If the API cannot return a parsed obligation.
+        """
         return _result(get_api.sync(obligation_key, client=self._client))
 
     def list_components(self, obligation_key: str) -> ObligationComponentsPublic:
+        """List components currently attached to an obligation."""
         return _result(list_components_api.sync(obligation_key, client=self._client))
 
     def upsert_component(
@@ -133,19 +165,30 @@ class ObligationsClient:
         *,
         type: str,
         label: str,
+        external_id: str,
         amount: float | str | None | Any = UNSET,
-        source: str | None | Any = UNSET,
-        external_id: str | None | Any = UNSET,
         metadata: dict[str, Any] | None | Any = UNSET,
     ) -> ObligationComponentPublic:
-        body = ObligationComponentUpsert(
+        """Create or update a component identified by ``external_id``.
+
+        ``amount`` and ``metadata`` distinguish omission from explicit
+        ``None``: omitted values leave those fields out of the request, while
+        ``None`` deliberately clears their value. ``external_id`` is required
+        so repeated provider imports update the same component.
+
+        Returns:
+            The created or updated component.
+
+        Raises:
+            OblidogValidationError: If the request is invalid.
+        """
+        body = IntegrationObligationComponentUpsert(
             type_=type,
             label=label,
-            amount=amount,
-            source=source,
             external_id=external_id,
+            amount=amount,
             metadata=(
-                ObligationComponentUpsertMetadataType0.from_dict(metadata)
+                IntegrationObligationComponentUpsertMetadataType0.from_dict(metadata)
                 if isinstance(metadata, dict)
                 else metadata
             ),
@@ -162,6 +205,18 @@ class ObligationsClient:
         due_date: datetime.date | None | Any = UNSET,
         issue_date: datetime.date | None | Any = UNSET,
     ) -> ObligationPublic:
+        """Update integration-controlled values on an obligation.
+
+        For every optional value, omission leaves it unchanged; explicit
+        ``None`` clears it. This applies to ``current_amount``, ``due_date``,
+        and ``issue_date``.
+
+        Returns:
+            The updated obligation.
+
+        Raises:
+            OblidogValidationError: If the update is invalid.
+        """
         body = ObligationIntegrationUpdate(
             current_amount=current_amount,
             due_date=due_date,
@@ -170,6 +225,7 @@ class ObligationsClient:
         return _result(update_api.sync(obligation_key, client=self._client, body=body))
 
     def append_note(self, obligation_key: str, text: str) -> ObligationPublic:
+        """Append ``text`` to an obligation's existing notes and return it."""
         return _result(
             append_note_api.sync(
                 obligation_key,
@@ -179,44 +235,51 @@ class ObligationsClient:
         )
 
     def mark_ready(self, obligation_key: str) -> ObligationPublic:
+        """Mark an obligation ready for payment."""
         return _result(mark_ready_api.sync(obligation_key, client=self._client))
 
     def mark_paid(self, obligation_key: str) -> ObligationPublic:
+        """Mark an obligation paid."""
         return _result(mark_paid_api.sync(obligation_key, client=self._client))
 
     def cancel(self, obligation_key: str) -> ObligationPublic:
+        """Cancel an obligation."""
         return _result(cancel_api.sync(obligation_key, client=self._client))
 
     def reopen(self, obligation_key: str) -> ObligationPublic:
+        """Reopen a cancelled or completed obligation."""
         return _result(reopen_api.sync(obligation_key, client=self._client))
 
     def mark_error(self, obligation_key: str) -> ObligationPublic:
+        """Mark an obligation as requiring attention after an integration error."""
         return _result(mark_error_api.sync(obligation_key, client=self._client))
 
 
 class CategoryDataClient:
-    """High-level synchronous operations for category data records."""
+    """Synchronous category data operations for the key-bound category."""
 
     def __init__(self, client: AuthenticatedClient) -> None:
         self._client = client
 
-    def schema(self, category_code: str) -> CategoryDataSchemaPublic:
-        return _result(
-            schema_category_data_api.sync(category_code, client=self._client)
-        )
+    def schema(self) -> CategoryDataSchemaPublic:
+        """Return the active schema used to validate category observations."""
+        return _result(schema_category_data_api.sync(client=self._client))
 
     def list(
         self,
-        category_code: str,
         *,
         from_: datetime.datetime | None = None,
         to: datetime.datetime | None = None,
         limit: int = 100,
         offset: int = 0,
     ) -> CategoryDataRecordsPublic:
+        """List category observations in an optional time range.
+
+        ``from_`` and ``to`` are inclusive API filters when supplied. Omit
+        either one to leave that end of the range unbounded.
+        """
         return _result(
             list_category_data_api.sync(
-                category_code,
                 client=self._client,
                 from_=from_ if from_ is not None else UNSET,
                 to=to if to is not None else UNSET,
@@ -225,33 +288,139 @@ class CategoryDataClient:
             )
         )
 
-    def latest(self, category_code: str) -> CategoryDataRecordPublic:
-        return _result(
-            latest_category_data_api.sync(category_code, client=self._client)
-        )
+    def latest(self) -> CategoryDataRecordPublic:
+        """Return the latest category observation."""
+        return _result(latest_category_data_api.sync(client=self._client))
 
     def create(
         self,
-        category_code: str,
         *,
         observed_at: datetime.datetime,
         data: dict[str, Any],
-        source: str | None | Any = UNSET,
         external_id: str | None | Any = UNSET,
     ) -> CategoryDataRecordPublic:
-        body = CategoryDataRecordCreate(
+        """Create a category observation.
+
+        Args:
+            observed_at: Time at which the source observed ``data``.
+            data: Values conforming to :meth:`schema`.
+            external_id: Provider-side identity used for idempotency. Omit it
+                when the source has no stable identifier; pass ``None`` to
+                explicitly send a null identifier.
+
+        Returns:
+            The created observation.
+
+        Raises:
+            OblidogValidationError: If the observation does not match schema.
+        """
+        body = IntegrationCategoryDataRecordCreate(
             observed_at=observed_at,
-            data=CategoryDataRecordCreateData.from_dict(data),
-            source=source,
+            data=IntegrationCategoryDataRecordCreateData.from_dict(data),
             external_id=external_id,
         )
-        return _result(
-            create_category_data_api.sync(category_code, client=self._client, body=body)
+        return _result(create_category_data_api.sync(client=self._client, body=body))
+
+
+class IntegrationRun:
+    """A started integration run that must be finished exactly once.
+
+    Obtain instances with :meth:`IntegrationsClient.run` and normally use them
+    as context managers. An exception before completion reports a sanitized
+    failure and is then propagated to the caller.
+    """
+
+    def __init__(
+        self,
+        integrations: IntegrationsClient,
+        *,
+        context: Context,
+        run_id: uuid.UUID,
+    ) -> None:
+        self.context = context
+        self.run_id = run_id
+        self._integrations = integrations
+        self._finished = False
+
+    def finish_success(self, *, changes_detected: bool | None) -> IntegrationPublic:
+        """Report successful completion.
+
+        Args:
+            changes_detected: ``True`` when this run changed Ledger data,
+                ``False`` for a known no-op, or ``None`` when unknown.
+
+        Returns:
+            The finished integration state.
+
+        Raises:
+            RuntimeError: If this run was already finished.
+        """
+        return self._finish(
+            result=IntegrationResult.SUCCESS,
+            changes_detected=changes_detected,
+            error=None,
         )
+
+    def finish_failure(
+        self,
+        *,
+        code: str = "provider_failed",
+        message: str = "Provider unavailable",
+    ) -> IntegrationPublic:
+        """Report a failure with a sanitized error summary.
+
+        Never put credentials, raw provider responses, or tracebacks in
+        ``message``.
+        """
+        return self._finish(
+            result=IntegrationResult.FAILURE,
+            changes_detected=None,
+            error=IntegrationRunError(code=code, message=message),
+        )
+
+    def _finish(
+        self,
+        *,
+        result: IntegrationResult,
+        changes_detected: bool | None,
+        error: IntegrationRunError | None,
+    ) -> IntegrationPublic:
+        if self._finished:
+            raise RuntimeError("integration run has already been finished")
+        finished = self._integrations.finish(
+            run_id=self.run_id,
+            result=result,
+            changes_detected=changes_detected,
+            error=error,
+        )
+        self._finished = True
+        return finished
+
+    def __enter__(self) -> Self:
+        return self
+
+    def __exit__(self, exc_type: object, *_: object) -> None:
+        if self._finished:
+            return
+        if exc_type is None:
+            self.finish_failure(
+                code="run_incomplete",
+                message="Integration run exited without completion",
+            )
+            return
+        try:
+            self.finish_failure(
+                code="unhandled_exception",
+                message="Integration run ended with an unhandled exception",
+            )
+        except Exception as error:
+            # Preserve the original exception; callers may log the reporting
+            # failure and retry it with the same run ID separately.
+            logger.warning("Unable to report integration run failure", exc_info=error)
 
 
 class IntegrationsClient:
-    """Read instance health and report runs using the existing ledger API key.
+    """Read authenticated integration context and report runs using its API key.
 
     Callers own run IDs and bounded retries. A conflict must never automatically
     refresh a revision and replay an old invocation.
@@ -260,19 +429,59 @@ class IntegrationsClient:
     def __init__(self, client: AuthenticatedClient) -> None:
         self._client = client
 
-    def get(self, integration_key: str) -> IntegrationPublic:
-        return _result(get_instance_api.sync(integration_key, client=self._client))
+    def context(self) -> Context:
+        """Return context associated with the authenticated integration API key.
+
+        The returned mapping includes the current ``revision`` used by
+        :meth:`run` for optimistic locking.
+        """
+        return _result(read_context_api.sync(client=self._client))
+
+    def run(self) -> IntegrationRun:
+        """Fetch context and start a run before synchronization work begins.
+
+        The context's current revision is used for optimistic locking. Use the
+        returned object as a context manager and finish it explicitly on the
+        successful path.
+
+        Example:
+            ```python
+            with client.integrations.run() as run:
+                # synchronize using run.context
+                run.finish_success(changes_detected=False)
+            ```
+
+        Raises:
+            TypeError: If the context does not contain an integer revision.
+            OblidogConflictError: If another worker has changed state first.
+        """
+        context = self.context()
+        expected_revision = context["revision"]
+        if not isinstance(expected_revision, int) or isinstance(
+            expected_revision, bool
+        ):
+            raise TypeError("integration context revision must be an integer")
+        run_id = uuid.uuid4()
+        self.start(run_id=run_id, expected_revision=expected_revision)
+        return IntegrationRun(self, context=context, run_id=run_id)
 
     def start(
         self,
-        integration_key: str,
         *,
         run_id: uuid.UUID,
         expected_revision: int,
     ) -> IntegrationPublic:
+        """Start a run using a caller-provided ID and expected revision.
+
+        Prefer :meth:`run` for normal synchronization. This lower-level method
+        is available when the caller explicitly owns scheduling and retries.
+
+        Raises:
+            OblidogConflictError: If the revision is stale or a run conflicts.
+            OblidogValidationError: If the request is invalid.
+        """
         return _result(
             start_run_api.sync(
-                integration_key,
                 client=self._client,
                 body=IntegrationRunStart(
                     run_id=run_id, expected_revision=expected_revision
@@ -282,16 +491,24 @@ class IntegrationsClient:
 
     def finish(
         self,
-        integration_key: str,
         *,
         run_id: uuid.UUID,
         result: IntegrationResult,
         changes_detected: bool | None = None,
         error: IntegrationRunError | None = None,
     ) -> IntegrationPublic:
+        """Finish a run using the same ID passed to :meth:`start`.
+
+        ``changes_detected`` is required by the protocol as a value but can be
+        ``None`` when its value is unknown. For failures, supply a sanitized
+        ``error`` and avoid secrets or tracebacks.
+
+        Raises:
+            OblidogConflictError: If the run cannot be completed in its state.
+            OblidogValidationError: If the completion request is invalid.
+        """
         return _result(
             finish_run_api.sync(
-                integration_key,
                 client=self._client,
                 body=IntegrationRunFinish(
                     run_id=run_id,
@@ -304,7 +521,17 @@ class IntegrationsClient:
 
 
 class OblidogClient:
-    """Public synchronous client for the Oblidog integration API."""
+    """Public synchronous client for the Oblidog integration API.
+
+    Args:
+        base_url: Root URL of the Oblidog Ledger API.
+        api_key: Integration API key used as a bearer token.
+        timeout: Per-request timeout in seconds.
+
+    The client is a context manager; exiting it closes the underlying HTTP
+    connection pool. Its ``obligations``, ``category_data``, and
+    ``integrations`` attributes expose the supported SDK operations.
+    """
 
     def __init__(
         self,
@@ -324,6 +551,7 @@ class OblidogClient:
         self.integrations = IntegrationsClient(self._client)
 
     def close(self) -> None:
+        """Close the underlying synchronous HTTP client."""
         self._client.get_httpx_client().close()
 
     def __enter__(self) -> Self:

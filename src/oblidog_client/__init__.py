@@ -2,6 +2,7 @@
 
 from .client import (
     CategoryDataClient,
+    IntegrationRun,
     IntegrationsClient,
     OblidogClient,
     ObligationsClient,
@@ -15,6 +16,7 @@ from .exceptions import (
 from .generated.models.category_data_record_public import CategoryDataRecordPublic
 from .generated.models.category_data_records_public import CategoryDataRecordsPublic
 from .generated.models.category_data_schema_public import CategoryDataSchemaPublic
+from .generated.models.context import Context
 from .generated.models.integration_conflict_code import IntegrationConflictCode
 from .generated.models.integration_execution_state import IntegrationExecutionState
 from .generated.models.integration_health import IntegrationHealth
@@ -32,11 +34,13 @@ __all__ = [
     "CategoryDataRecordPublic",
     "CategoryDataRecordsPublic",
     "CategoryDataSchemaPublic",
+    "Context",
     "IntegrationConflictCode",
     "IntegrationExecutionState",
     "IntegrationHealth",
     "IntegrationPublic",
     "IntegrationResult",
+    "IntegrationRun",
     "IntegrationRunError",
     "IntegrationsClient",
     "OblidogApiError",
