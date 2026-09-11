@@ -153,6 +153,49 @@
         ],
         "type": "object"
       },
+      "CounterpartySummaryPublic": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "logo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Url"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "short_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Short Name"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "short_name",
+          "logo_url"
+        ],
+        "title": "CounterpartySummaryPublic",
+        "type": "object"
+      },
       "CurrentValueSource": {
         "enum": [
           "unknown",
@@ -224,6 +267,70 @@
         "title": "IntegrationConflictResponse",
         "type": "object"
       },
+      "IntegrationCredentialPublic": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "key_prefix": {
+            "title": "Key Prefix",
+            "type": "string"
+          },
+          "last_used_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Used At"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          }
+        },
+        "required": [
+          "id",
+          "key_prefix",
+          "created_at",
+          "last_used_at",
+          "expires_at",
+          "revoked_at"
+        ],
+        "title": "IntegrationCredentialPublic",
+        "type": "object"
+      },
       "IntegrationExecutionState": {
         "enum": [
           "never_run",
@@ -249,18 +356,22 @@
       },
       "IntegrationPublic": {
         "properties": {
-          "category_ids": {
-            "items": {
-              "format": "uuid",
-              "type": "string"
-            },
-            "title": "Category Ids",
-            "type": "array"
+          "category_id": {
+            "format": "uuid",
+            "title": "Category Id",
+            "type": "string"
           },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
             "type": "string"
+          },
+          "credentials": {
+            "items": {
+              "$ref": "#/components/schemas/IntegrationCredentialPublic"
+            },
+            "title": "Credentials",
+            "type": "array"
           },
           "current_deadline_at": {
             "anyOf": [
@@ -341,10 +452,6 @@
             "title": "Is Stale",
             "type": "boolean"
           },
-          "key": {
-            "title": "Key",
-            "type": "string"
-          },
           "last_changes_detected": {
             "anyOf": [
               {
@@ -421,10 +528,6 @@
             "title": "Name",
             "type": "string"
           },
-          "provider": {
-            "title": "Provider",
-            "type": "string"
-          },
           "revision": {
             "title": "Revision",
             "type": "integer"
@@ -446,10 +549,9 @@
         "required": [
           "id",
           "ledger_id",
-          "key",
-          "provider",
           "name",
-          "category_ids",
+          "category_id",
+          "credentials",
           "enabled",
           "created_at",
           "updated_at",
@@ -570,81 +672,6 @@
           "expected_revision"
         ],
         "title": "IntegrationRunStart",
-        "type": "object"
-      },
-      "LedgerPublic": {
-        "properties": {
-          "created_at": {
-            "format": "date-time",
-            "title": "Created At",
-            "type": "string"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "id": {
-            "format": "uuid",
-            "title": "Id",
-            "type": "string"
-          },
-          "name": {
-            "title": "Name",
-            "type": "string"
-          },
-          "owner_user_id": {
-            "format": "uuid",
-            "title": "Owner User Id",
-            "type": "string"
-          },
-          "updated_at": {
-            "format": "date-time",
-            "title": "Updated At",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "owner_user_id",
-          "name",
-          "description",
-          "created_at",
-          "updated_at"
-        ],
-        "title": "LedgerPublic",
-        "type": "object"
-      },
-      "LedgerUpdate": {
-        "properties": {
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "name": {
-            "maxLength": 255,
-            "minLength": 1,
-            "title": "Name",
-            "type": "string"
-          }
-        },
-        "required": [
-          "name"
-        ],
-        "title": "LedgerUpdate",
         "type": "object"
       },
       "ObligationComponentPublic": {
@@ -950,6 +977,28 @@
             "title": "Category Id",
             "type": "string"
           },
+          "counterparty": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CounterpartySummaryPublic"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "counterparty_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Counterparty Id"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -1074,6 +1123,8 @@
           "id",
           "ledger_id",
           "category_id",
+          "counterparty_id",
+          "counterparty",
           "category_code",
           "key",
           "name",
@@ -1172,7 +1223,7 @@
     },
     "securitySchemes": {
       "IntegrationApiKey": {
-        "description": "A ledger-scoped API key, for example fdg_live_\u2026",
+        "description": "An integration connection key, for example fdg_live_\u2026",
         "scheme": "bearer",
         "type": "http"
       }
@@ -1185,20 +1236,10 @@
   },
   "openapi": "3.1.0",
   "paths": {
-    "/api/v1/integration/categories/{category_code}/data-records": {
+    "/api/v1/integration/category/data-records": {
       "get": {
         "operationId": "integration-read_integration_category_data_records",
         "parameters": [
-          {
-            "in": "path",
-            "name": "category_code",
-            "required": true,
-            "schema": {
-              "pattern": "^[A-Z]{4}$",
-              "title": "Category Code",
-              "type": "string"
-            }
-          },
           {
             "in": "query",
             "name": "from",
@@ -1291,18 +1332,6 @@
       },
       "post": {
         "operationId": "integration-create_integration_category_data_record",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "category_code",
-            "required": true,
-            "schema": {
-              "pattern": "^[A-Z]{4}$",
-              "title": "Category Code",
-              "type": "string"
-            }
-          }
-        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -1346,21 +1375,9 @@
         ]
       }
     },
-    "/api/v1/integration/categories/{category_code}/data-records/latest": {
+    "/api/v1/integration/category/data-records/latest": {
       "get": {
         "operationId": "integration-read_latest_integration_category_data_record",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "category_code",
-            "required": true,
-            "schema": {
-              "pattern": "^[A-Z]{4}$",
-              "title": "Category Code",
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "content": {
@@ -1371,16 +1388,6 @@
               }
             },
             "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
           }
         },
         "security": [
@@ -1394,21 +1401,9 @@
         ]
       }
     },
-    "/api/v1/integration/categories/{category_code}/data-schema": {
+    "/api/v1/integration/category/schema": {
       "get": {
         "operationId": "integration-read_integration_category_data_schema",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "category_code",
-            "required": true,
-            "schema": {
-              "pattern": "^[A-Z]{4}$",
-              "title": "Category Code",
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "content": {
@@ -1419,16 +1414,6 @@
               }
             },
             "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
           }
         },
         "security": [
@@ -1442,203 +1427,17 @@
         ]
       }
     },
-    "/api/v1/integration/instances/{integration_key}": {
+    "/api/v1/integration/context": {
       "get": {
-        "operationId": "integration-read_integration_instance",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "integration_key",
-            "required": true,
-            "schema": {
-              "maxLength": 64,
-              "pattern": "^[a-z][a-z0-9-]{0,63}$",
-              "title": "Integration Key",
-              "type": "string"
-            }
-          }
-        ],
+        "operationId": "integration-read_integration_context",
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/IntegrationPublic"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "IntegrationApiKey": []
-          }
-        ],
-        "summary": "Read Integration Instance",
-        "tags": [
-          "integration"
-        ]
-      }
-    },
-    "/api/v1/integration/instances/{integration_key}/finish": {
-      "post": {
-        "operationId": "integration-finish_integration_run",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "integration_key",
-            "required": true,
-            "schema": {
-              "maxLength": 64,
-              "pattern": "^[a-z][a-z0-9-]{0,63}$",
-              "title": "Integration Key",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/IntegrationRunFinish"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IntegrationPublic"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IntegrationConflictResponse"
-                }
-              }
-            },
-            "description": "Integration run conflict"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "IntegrationApiKey": []
-          }
-        ],
-        "summary": "Finish Integration Run",
-        "tags": [
-          "integration"
-        ]
-      }
-    },
-    "/api/v1/integration/instances/{integration_key}/start": {
-      "post": {
-        "operationId": "integration-start_integration_run",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "integration_key",
-            "required": true,
-            "schema": {
-              "maxLength": 64,
-              "pattern": "^[a-z][a-z0-9-]{0,63}$",
-              "title": "Integration Key",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/IntegrationRunStart"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IntegrationPublic"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IntegrationConflictResponse"
-                }
-              }
-            },
-            "description": "Integration run conflict"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "IntegrationApiKey": []
-          }
-        ],
-        "summary": "Start Integration Run",
-        "tags": [
-          "integration"
-        ]
-      }
-    },
-    "/api/v1/integration/ledger": {
-      "get": {
-        "description": "Return only the ledger selected by the authenticated API key.",
-        "operationId": "integration-read_integration_ledger",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LedgerPublic"
+                  "additionalProperties": true,
+                  "title": "Response Integration-Read Integration Context",
+                  "type": "object"
                 }
               }
             },
@@ -1650,52 +1449,7 @@
             "IntegrationApiKey": []
           }
         ],
-        "summary": "Read Integration Ledger",
-        "tags": [
-          "integration"
-        ]
-      },
-      "patch": {
-        "description": "Update the key's ledger through the shared ledger use case.",
-        "operationId": "integration-update_integration_ledger",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LedgerUpdate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LedgerPublic"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "IntegrationApiKey": []
-          }
-        ],
-        "summary": "Update Integration Ledger",
+        "summary": "Read Integration Context",
         "tags": [
           "integration"
         ]
@@ -1739,23 +1493,6 @@
                 }
               ],
               "title": "Month"
-            }
-          },
-          {
-            "in": "query",
-            "name": "category_code",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "pattern": "^[A-Z]{4}$",
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Category Code"
             }
           },
           {
@@ -2301,6 +2038,118 @@
           }
         ],
         "summary": "Reopen Integration Obligation",
+        "tags": [
+          "integration"
+        ]
+      }
+    },
+    "/api/v1/integration/runs/finish": {
+      "post": {
+        "operationId": "integration-finish_integration_run",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IntegrationRunFinish"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationPublic"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationConflictResponse"
+                }
+              }
+            },
+            "description": "Integration run conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "IntegrationApiKey": []
+          }
+        ],
+        "summary": "Finish Integration Run",
+        "tags": [
+          "integration"
+        ]
+      }
+    },
+    "/api/v1/integration/runs/start": {
+      "post": {
+        "operationId": "integration-start_integration_run",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IntegrationRunStart"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationPublic"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationConflictResponse"
+                }
+              }
+            },
+            "description": "Integration run conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "IntegrationApiKey": []
+          }
+        ],
+        "summary": "Start Integration Run",
         "tags": [
           "integration"
         ]

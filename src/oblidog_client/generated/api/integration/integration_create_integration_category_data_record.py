@@ -1,6 +1,5 @@
 from http import HTTPStatus
 from typing import Any
-from urllib.parse import quote
 
 import httpx
 
@@ -13,7 +12,6 @@ from ...types import Response
 
 
 def _get_kwargs(
-    category_code: str,
     *,
     body: CategoryDataRecordCreate,
 ) -> dict[str, Any]:
@@ -21,9 +19,7 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": "/api/v1/integration/categories/{category_code}/data-records".format(
-            category_code=quote(str(category_code), safe=""),
-        ),
+        "url": "/api/v1/integration/category/data-records",
     }
 
     _kwargs["json"] = body.to_dict()
@@ -65,7 +61,6 @@ def _build_response(
 
 
 def sync_detailed(
-    category_code: str,
     *,
     client: AuthenticatedClient,
     body: CategoryDataRecordCreate,
@@ -73,7 +68,6 @@ def sync_detailed(
     """Create Integration Category Data Record
 
     Args:
-        category_code (str):
         body (CategoryDataRecordCreate):
 
     Raises:
@@ -85,7 +79,6 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
-        category_code=category_code,
         body=body,
     )
 
@@ -97,7 +90,6 @@ def sync_detailed(
 
 
 def sync(
-    category_code: str,
     *,
     client: AuthenticatedClient,
     body: CategoryDataRecordCreate,
@@ -105,7 +97,6 @@ def sync(
     """Create Integration Category Data Record
 
     Args:
-        category_code (str):
         body (CategoryDataRecordCreate):
 
     Raises:
@@ -117,14 +108,12 @@ def sync(
     """
 
     return sync_detailed(
-        category_code=category_code,
         client=client,
         body=body,
     ).parsed
 
 
 async def asyncio_detailed(
-    category_code: str,
     *,
     client: AuthenticatedClient,
     body: CategoryDataRecordCreate,
@@ -132,7 +121,6 @@ async def asyncio_detailed(
     """Create Integration Category Data Record
 
     Args:
-        category_code (str):
         body (CategoryDataRecordCreate):
 
     Raises:
@@ -144,7 +132,6 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
-        category_code=category_code,
         body=body,
     )
 
@@ -154,7 +141,6 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    category_code: str,
     *,
     client: AuthenticatedClient,
     body: CategoryDataRecordCreate,
@@ -162,7 +148,6 @@ async def asyncio(
     """Create Integration Category Data Record
 
     Args:
-        category_code (str):
         body (CategoryDataRecordCreate):
 
     Raises:
@@ -175,7 +160,6 @@ async def asyncio(
 
     return (
         await asyncio_detailed(
-            category_code=category_code,
             client=client,
             body=body,
         )

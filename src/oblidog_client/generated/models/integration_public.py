@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 from collections.abc import Mapping
-from typing import Any, Self, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Self, TypeVar, cast
 from uuid import UUID
 
 from attrs import define as _attrs_define
@@ -12,6 +12,10 @@ from ..models.integration_execution_state import IntegrationExecutionState
 from ..models.integration_health import IntegrationHealth
 from ..models.integration_result import IntegrationResult
 
+if TYPE_CHECKING:
+    from ..models.integration_credential_public import IntegrationCredentialPublic
+
+
 T = TypeVar("T", bound="IntegrationPublic")
 
 
@@ -19,8 +23,9 @@ T = TypeVar("T", bound="IntegrationPublic")
 class IntegrationPublic:
     """
     Attributes:
-        category_ids (list[UUID]):
+        category_id (UUID):
         created_at (datetime.datetime):
+        credentials (list[IntegrationCredentialPublic]):
         current_deadline_at (datetime.datetime | None):
         current_finished_at (datetime.datetime | None):
         current_run_id (None | UUID):
@@ -31,7 +36,6 @@ class IntegrationPublic:
         health (IntegrationHealth):
         id (UUID):
         is_stale (bool):
-        key (str):
         last_changes_detected (bool | None):
         last_error_code (None | str):
         last_error_message (None | str):
@@ -40,15 +44,15 @@ class IntegrationPublic:
         last_success_at (datetime.datetime | None):
         ledger_id (UUID):
         name (str):
-        provider (str):
         revision (int):
         run_timeout_seconds (int):
         stale_after_seconds (int):
         updated_at (datetime.datetime):
     """
 
-    category_ids: list[UUID]
+    category_id: UUID
     created_at: datetime.datetime
+    credentials: list[IntegrationCredentialPublic]
     current_deadline_at: datetime.datetime | None
     current_finished_at: datetime.datetime | None
     current_run_id: None | UUID
@@ -59,7 +63,6 @@ class IntegrationPublic:
     health: IntegrationHealth
     id: UUID
     is_stale: bool
-    key: str
     last_changes_detected: bool | None
     last_error_code: None | str
     last_error_message: None | str
@@ -68,7 +71,6 @@ class IntegrationPublic:
     last_success_at: datetime.datetime | None
     ledger_id: UUID
     name: str
-    provider: str
     revision: int
     run_timeout_seconds: int
     stale_after_seconds: int
@@ -76,12 +78,14 @@ class IntegrationPublic:
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        category_ids = []
-        for category_ids_item_data in self.category_ids:
-            category_ids_item = str(category_ids_item_data)
-            category_ids.append(category_ids_item)
+        category_id = str(self.category_id)
 
         created_at = self.created_at.isoformat()
+
+        credentials = []
+        for credentials_item_data in self.credentials:
+            credentials_item = credentials_item_data.to_dict()
+            credentials.append(credentials_item)
 
         current_deadline_at: None | str
         if isinstance(self.current_deadline_at, datetime.datetime):
@@ -123,8 +127,6 @@ class IntegrationPublic:
 
         is_stale = self.is_stale
 
-        key = self.key
-
         last_changes_detected: bool | None
         last_changes_detected = self.last_changes_detected
 
@@ -156,8 +158,6 @@ class IntegrationPublic:
 
         name = self.name
 
-        provider = self.provider
-
         revision = self.revision
 
         run_timeout_seconds = self.run_timeout_seconds
@@ -170,8 +170,9 @@ class IntegrationPublic:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "category_ids": category_ids,
+                "category_id": category_id,
                 "created_at": created_at,
+                "credentials": credentials,
                 "current_deadline_at": current_deadline_at,
                 "current_finished_at": current_finished_at,
                 "current_run_id": current_run_id,
@@ -182,7 +183,6 @@ class IntegrationPublic:
                 "health": health,
                 "id": id,
                 "is_stale": is_stale,
-                "key": key,
                 "last_changes_detected": last_changes_detected,
                 "last_error_code": last_error_code,
                 "last_error_message": last_error_message,
@@ -191,7 +191,6 @@ class IntegrationPublic:
                 "last_success_at": last_success_at,
                 "ledger_id": ledger_id,
                 "name": name,
-                "provider": provider,
                 "revision": revision,
                 "run_timeout_seconds": run_timeout_seconds,
                 "stale_after_seconds": stale_after_seconds,
@@ -203,15 +202,21 @@ class IntegrationPublic:
 
     @classmethod
     def from_dict(cls, src_dict: Mapping[str, Any]) -> Self:
-        d = dict(src_dict)
-        category_ids = []
-        _category_ids = d.pop("category_ids")
-        for category_ids_item_data in _category_ids:
-            category_ids_item = UUID(category_ids_item_data)
+        from ..models.integration_credential_public import IntegrationCredentialPublic
 
-            category_ids.append(category_ids_item)
+        d = dict(src_dict)
+        category_id = UUID(d.pop("category_id"))
 
         created_at = datetime.datetime.fromisoformat(d.pop("created_at"))
+
+        credentials = []
+        _credentials = d.pop("credentials")
+        for credentials_item_data in _credentials:
+            credentials_item = IntegrationCredentialPublic.from_dict(
+                credentials_item_data
+            )
+
+            credentials.append(credentials_item)
 
         def _parse_current_deadline_at(data: object) -> datetime.datetime | None:
             if data is None:
@@ -298,8 +303,6 @@ class IntegrationPublic:
 
         is_stale = d.pop("is_stale")
 
-        key = d.pop("key")
-
         def _parse_last_changes_detected(data: object) -> bool | None:
             if data is None:
                 return data
@@ -372,8 +375,6 @@ class IntegrationPublic:
 
         name = d.pop("name")
 
-        provider = d.pop("provider")
-
         revision = d.pop("revision")
 
         run_timeout_seconds = d.pop("run_timeout_seconds")
@@ -383,8 +384,9 @@ class IntegrationPublic:
         updated_at = datetime.datetime.fromisoformat(d.pop("updated_at"))
 
         integration_public = cls(
-            category_ids=category_ids,
+            category_id=category_id,
             created_at=created_at,
+            credentials=credentials,
             current_deadline_at=current_deadline_at,
             current_finished_at=current_finished_at,
             current_run_id=current_run_id,
@@ -395,7 +397,6 @@ class IntegrationPublic:
             health=health,
             id=id,
             is_stale=is_stale,
-            key=key,
             last_changes_detected=last_changes_detected,
             last_error_code=last_error_code,
             last_error_message=last_error_message,
@@ -404,7 +405,6 @@ class IntegrationPublic:
             last_success_at=last_success_at,
             ledger_id=ledger_id,
             name=name,
-            provider=provider,
             revision=revision,
             run_timeout_seconds=run_timeout_seconds,
             stale_after_seconds=stale_after_seconds,
