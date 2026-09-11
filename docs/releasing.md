@@ -18,7 +18,9 @@ Configure a Trusted Publisher for `oblidog-client` on both PyPI and TestPyPI wit
 | Workflow | `release.yml` |
 | Environment | `pypi` on PyPI, `testpypi` on TestPyPI |
 
-PyPI supports a pending Trusted Publisher when the project does not exist yet. This lets the first successful production workflow create the `oblidog-client` project. Do not add `PYPI_TOKEN`, a password, or another publishing secret to GitHub.
+The `oblidog-client` project already exists on PyPI, so configure the Trusted
+Publisher for that existing project. Do not add `PYPI_TOKEN`, a password, or
+another publishing secret to GitHub.
 
 ## TestPyPI dry run
 
