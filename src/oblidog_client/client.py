@@ -3,6 +3,7 @@ from __future__ import annotations
 import datetime
 import logging
 import uuid
+from collections.abc import Mapping
 from typing import Any, Self
 
 from .exceptions import OblidogApiError, OblidogConflictError, OblidogValidationError
@@ -432,8 +433,8 @@ class IntegrationsClient:
     def context(self) -> Context:
         """Return context associated with the authenticated integration API key.
 
-        The returned mapping includes the current ``revision`` used by
-        :meth:`run` for optimistic locking.
+        The returned mapping includes an ``integration`` object whose current
+        ``revision`` is used by :meth:`run` for optimistic locking.
         """
         return _result(read_context_api.sync(client=self._client))
 
@@ -452,15 +453,21 @@ class IntegrationsClient:
             ```
 
         Raises:
-            TypeError: If the context does not contain an integer revision.
+            TypeError: If the context does not contain an integration object
+                with an integer revision.
             OblidogConflictError: If another worker has changed state first.
         """
         context = self.context()
-        expected_revision = context["revision"]
+        integration = context.additional_properties.get("integration")
+        if not isinstance(integration, Mapping):
+            raise TypeError("integration context must contain an 'integration' object")
+        expected_revision = integration.get("revision")
         if not isinstance(expected_revision, int) or isinstance(
             expected_revision, bool
         ):
-            raise TypeError("integration context revision must be an integer")
+            raise TypeError(
+                "integration context integration.revision must be an integer"
+            )
         run_id = uuid.uuid4()
         self.start(run_id=run_id, expected_revision=expected_revision)
         return IntegrationRun(self, context=context, run_id=run_id)
