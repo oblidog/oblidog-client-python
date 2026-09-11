@@ -1,6 +1,6 @@
 [project]
 name = "oblidog-client"
-version = "0.1.0rc1"
+version = "0.1.1rc1"
 description = "Python client for the Oblidog integration API"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -37,6 +37,7 @@ Changelog = "https://github.com/oblidog/oblidog-client-python/releases"
 dev = [
   "commitizen>=4.18.0",
   "openapi-python-client>=0.25",
+  "packaging>=24",
   "pytest>=8.0",
   "ruff>=0.6",
   "twine>=6.1",
