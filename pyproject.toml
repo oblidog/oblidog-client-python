@@ -1,6 +1,6 @@
 [project]
 name = "oblidog-client"
-version = "0.1.0"
+version = "0.1.0rc1"
 description = "Python client for the Oblidog integration API"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -35,6 +35,7 @@ Changelog = "https://github.com/oblidog/oblidog-client-python/releases"
 
 [dependency-groups]
 dev = [
+  "commitizen>=4.18.0",
   "openapi-python-client>=0.25",
   "pytest>=8.0",
   "ruff>=0.6",
@@ -59,3 +60,9 @@ exclude = ["src/oblidog_client/generated"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src", "."]
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+version_provider = "pep621"
+tag_format = "v$version"
+annotated_tag = true

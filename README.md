@@ -44,6 +44,14 @@ intentionally excludes generated endpoints and transport classes.
 
 This project uses `uv` for dependency and environment management. The low-level client is generated from the Oblidog Ledger integration OpenAPI contract; generated code should not be edited manually.
 
+Use Commitizen to create Conventional Commit messages interactively, or to
+validate one non-interactively:
+
+```bash
+uv run cz commit
+uv run cz check -m "feat: add a new capability"
+```
+
 Run the same distribution verification used by CI locally:
 
 ```bash
