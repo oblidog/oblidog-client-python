@@ -18,7 +18,9 @@ Configure a Trusted Publisher for `oblidog-client` on both PyPI and TestPyPI wit
 | Workflow | `release.yml` |
 | Environment | `pypi` on PyPI, `testpypi` on TestPyPI |
 
-PyPI supports a pending Trusted Publisher when the project does not exist yet. This lets the first successful production workflow create the `oblidog-client` project. Do not add `PYPI_TOKEN`, a password, or another publishing secret to GitHub.
+The `oblidog-client` project already exists on PyPI, so configure the Trusted
+Publisher for that existing project. Do not add `PYPI_TOKEN`, a password, or
+another publishing secret to GitHub.
 
 ## TestPyPI dry run
 
@@ -32,9 +34,9 @@ A manual dispatch can never invoke the production publication job. TestPyPI uses
 
 ## Production release
 
-1. Confirm that `pyproject.toml` contains the intended version and all checks on `main` pass.
-2. Create or reuse the matching stable `vX.Y.Z` tag.
-3. Publish a GitHub Release for that tag.
+1. Merge releasable Conventional Commits to `main`. The **Prepare release** workflow creates a `release/vX.Y.Z` pull request with the version bump.
+2. Review and merge that pull request after its checks pass.
+3. Create a GitHub Release for the matching stable `vX.Y.Z` tag on `main`.
 4. Review the `pypi` environment deployment and approve it.
 5. Verify the release at `https://pypi.org/project/oblidog-client/`.
 
