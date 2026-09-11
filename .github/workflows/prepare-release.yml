@@ -90,7 +90,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           uv run cz bump --yes --check-consistency
           git tag -d "v${RELEASE_VERSION}"
-          uv lock --offline
+          uv lock
           git add uv.lock
           git commit --amend --no-edit
           git push origin HEAD:"refs/heads/${RELEASE_BRANCH}"
