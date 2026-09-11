@@ -1,5 +1,10 @@
 # oblidog-client
 
+[![CI](https://github.com/oblidog/oblidog-client-python/actions/workflows/ci.yml/badge.svg)](https://github.com/oblidog/oblidog-client-python/actions/workflows/ci.yml)
+[![Release](https://github.com/oblidog/oblidog-client-python/actions/workflows/release.yml/badge.svg)](https://github.com/oblidog/oblidog-client-python/actions/workflows/release.yml)
+![PyPI](https://img.shields.io/pypi/v/oblidog-client?include_prereleases)
+![Python](https://img.shields.io/pypi/pyversions/oblidog-client?include_prereleases)
+
 Python client for the Oblidog integration API.
 
 Use the handwritten `OblidogClient` facade in application code. The
