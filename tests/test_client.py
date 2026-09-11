@@ -19,6 +19,8 @@ OBLIGATION = {
     "ledger_id": "22222222-2222-2222-2222-222222222222",
     "category_id": "33333333-3333-3333-3333-333333333333",
     "category_code": "ENRG",
+    "counterparty": None,
+    "counterparty_id": None,
     "key": "ENRG-2026-08",
     "name": "Energy",
     "notes": None,
@@ -84,7 +86,6 @@ def test_list_obligations_sends_filters_and_authentication() -> None:
         assert dict(request.url.params) == {
             "year": "2026",
             "month": "8",
-            "category_code": "ENRG",
             "lifecycle": "ready",
         }
         assert_auth(request)
@@ -94,7 +95,6 @@ def test_list_obligations_sends_filters_and_authentication() -> None:
         result = client.obligations.list(
             year=2026,
             month=8,
-            category_code="ENRG",
             lifecycle=ObligationLifecycle.READY,
         )
 
@@ -182,7 +182,7 @@ def test_category_data_schema_and_list_send_expected_requests() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         requests.append(request)
         assert_auth(request)
-        if request.url.path.endswith("/data-schema"):
+        if request.url.path.endswith("/schema"):
             return httpx.Response(
                 200,
                 json={
@@ -195,9 +195,8 @@ def test_category_data_schema_and_list_send_expected_requests() -> None:
         return httpx.Response(200, json={"data": [CATEGORY_RECORD], "count": 1})
 
     with make_client(httpx.MockTransport(handler)) as client:
-        schema = client.category_data.schema("ENRG")
+        schema = client.category_data.schema()
         records = client.category_data.list(
-            "ENRG",
             from_=datetime.datetime(2026, 8, 1, tzinfo=datetime.UTC),
             to=datetime.datetime(2026, 8, 2, tzinfo=datetime.UTC),
             limit=5,
@@ -206,7 +205,7 @@ def test_category_data_schema_and_list_send_expected_requests() -> None:
 
     assert schema.version == 1
     assert records.data[0].data.to_dict() == {"meter_reading_kwh": 1234.5}
-    assert requests[0].url.path == "/api/v1/integration/categories/ENRG/data-schema"
+    assert requests[0].url.path == "/api/v1/integration/category/schema"
     assert dict(requests[1].url.params) == {
         "from": "2026-08-01T00:00:00+00:00",
         "to": "2026-08-02T00:00:00+00:00",
@@ -218,20 +217,17 @@ def test_category_data_schema_and_list_send_expected_requests() -> None:
 def test_category_data_create_wraps_dict_and_preserves_explicit_none() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         assert request.method == "POST"
-        assert request.url.path == "/api/v1/integration/categories/ENRG/data-records"
+        assert request.url.path == "/api/v1/integration/category/data-records"
         assert json.loads(request.content) == {
             "observed_at": "2026-08-01T10:00:00+00:00",
             "data": {"meter_reading_kwh": 1234.5},
-            "source": None,
         }
         return httpx.Response(200, json=CATEGORY_RECORD)
 
     with make_client(httpx.MockTransport(handler)) as client:
         record = client.category_data.create(
-            "ENRG",
             observed_at=datetime.datetime(2026, 8, 1, 10, tzinfo=datetime.UTC),
             data={"meter_reading_kwh": 1234.5},
-            source=None,
         )
 
     assert record.schema_version == 1
@@ -243,9 +239,9 @@ def test_category_data_latest_validation_becomes_high_level_exception() -> None:
 
     with (
         make_client(httpx.MockTransport(handler)) as client,
-        pytest.raises(OblidogValidationError),
+        pytest.raises(errors.UnexpectedStatus),
     ):
-        client.category_data.latest("ABCD")
+        client.category_data.latest()
 
 
 def test_obligation_components_use_dict_metadata_and_optional_values() -> None:
@@ -261,7 +257,7 @@ def test_obligation_components_use_dict_metadata_and_optional_values() -> None:
             "label": "August electricity",
             "amount": None,
             "metadata": {"invoice_number": "FV/123/2026"},
-            "source": None,
+            "external_id": "invoice-line-123",
         }
         return httpx.Response(200, json=COMPONENT)
 
@@ -271,8 +267,8 @@ def test_obligation_components_use_dict_metadata_and_optional_values() -> None:
             "ENRG-2026-08",
             type="principal",
             label="August electricity",
+            external_id="invoice-line-123",
             amount=None,
-            source=None,
             metadata={"invoice_number": "FV/123/2026"},
         )
 
@@ -289,7 +285,7 @@ def test_missing_parsed_response_becomes_api_error() -> None:
     with make_client(httpx.MockTransport(handler)) as client:
         client._client.raise_on_unexpected_status = False
         with pytest.raises(OblidogApiError) as exc_info:
-            client.category_data.latest("ENRG")
+            client.category_data.latest()
 
     assert exc_info.value.status_code == 0
 
@@ -297,10 +293,9 @@ def test_missing_parsed_response_becomes_api_error() -> None:
 INTEGRATION = {
     "id": "55555555-5555-5555-5555-555555555555",
     "ledger_id": OBLIGATION["ledger_id"],
-    "key": "nju-mario",
-    "provider": "nju",
     "name": "Phone",
-    "category_ids": [],
+    "category_id": "33333333-3333-3333-3333-333333333333",
+    "credentials": [],
     "enabled": True,
     "created_at": "2026-09-08T09:00:00Z",
     "updated_at": "2026-09-08T09:00:00Z",
@@ -324,10 +319,10 @@ INTEGRATION = {
 }
 
 
-def test_integration_get_and_start_use_shared_auth_and_caller_run_identity() -> None:
+def test_integration_context_and_start_use_shared_auth_and_caller_run_identity() -> (
+    None
+):
     import uuid
-
-    from oblidog_client import IntegrationHealth
 
     run_id = uuid.uuid4()
     requests = []
@@ -336,9 +331,9 @@ def test_integration_get_and_start_use_shared_auth_and_caller_run_identity() -> 
         requests.append(request)
         assert_auth(request)
         if request.method == "GET":
-            assert request.url.path == "/api/v1/integration/instances/nju-mario"
-            return httpx.Response(200, json=INTEGRATION)
-        assert request.url.path == "/api/v1/integration/instances/nju-mario/start"
+            assert request.url.path == "/api/v1/integration/context"
+            return httpx.Response(200, json={"integration_id": INTEGRATION["id"]})
+        assert request.url.path == "/api/v1/integration/runs/start"
         assert json.loads(request.content) == {
             "run_id": str(run_id),
             "expected_revision": 0,
@@ -357,12 +352,10 @@ def test_integration_get_and_start_use_shared_auth_and_caller_run_identity() -> 
         )
 
     with make_client(httpx.MockTransport(handler)) as client:
-        instance = client.integrations.get("nju-mario")
-        assert instance.health == IntegrationHealth.NEVER_RUN
+        context = client.integrations.context()
+        assert context["integration_id"] == INTEGRATION["id"]
         for _ in range(2):
-            started = client.integrations.start(
-                "nju-mario", run_id=run_id, expected_revision=instance.revision
-            )
+            started = client.integrations.start(run_id=run_id, expected_revision=0)
             assert started.current_run_id == run_id
             assert started.revision == 1
             assert started.current_deadline_at == datetime.datetime(
@@ -370,6 +363,42 @@ def test_integration_get_and_start_use_shared_auth_and_caller_run_identity() -> 
             )
     assert len(requests) == 3
     assert requests[1].content == requests[2].content
+
+
+def test_integration_run_fetches_context_then_starts_and_finishes() -> None:
+    requests: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        assert_auth(request)
+        if request.url.path == "/api/v1/integration/context":
+            return httpx.Response(200, json={"revision": 4, "provider": "nju"})
+        body = json.loads(request.content)
+        if request.url.path == "/api/v1/integration/runs/start":
+            assert body["expected_revision"] == 4
+            return httpx.Response(200, json={**INTEGRATION, "revision": 5})
+        assert request.url.path == "/api/v1/integration/runs/finish"
+        assert body == {
+            "run_id": body["run_id"],
+            "result": "success",
+            "changes_detected": False,
+            "error": None,
+        }
+        return httpx.Response(200, json={**INTEGRATION, "revision": 6})
+
+    with (
+        make_client(httpx.MockTransport(handler)) as client,
+        client.integrations.run() as run,
+    ):
+        assert run.context["provider"] == "nju"
+        finished = run.finish_success(changes_detected=False)
+
+    assert finished.revision == 6
+    assert [request.url.path for request in requests] == [
+        "/api/v1/integration/context",
+        "/api/v1/integration/runs/start",
+        "/api/v1/integration/runs/finish",
+    ]
 
 
 @pytest.mark.parametrize("changes", [True, False, None])
@@ -385,7 +414,7 @@ def test_integration_success_preserves_nullable_change_signal(
     def handler(request: httpx.Request) -> httpx.Response:
         assert_auth(request)
         assert request.method == "POST"
-        assert request.url.path == "/api/v1/integration/instances/nju-mario/finish"
+        assert request.url.path == "/api/v1/integration/runs/finish"
         assert json.loads(request.content) == {
             "run_id": str(run_id),
             "result": "success",
@@ -405,7 +434,6 @@ def test_integration_success_preserves_nullable_change_signal(
 
     with make_client(httpx.MockTransport(handler)) as client:
         result = client.integrations.finish(
-            "nju-mario",
             run_id=run_id,
             result=IntegrationResult.SUCCESS,
             changes_detected=changes,
@@ -442,7 +470,6 @@ def test_integration_failure_sends_sanitized_error() -> None:
 
     with make_client(httpx.MockTransport(handler)) as client:
         result = client.integrations.finish(
-            "nju-mario",
             run_id=run_id,
             result=IntegrationResult.FAILURE,
             error=IntegrationRunError(
@@ -466,9 +493,7 @@ def test_integration_reporting_propagates_errors_without_retry(status: int) -> N
 
     with make_client(httpx.MockTransport(handler)) as client:
         with pytest.raises(errors.UnexpectedStatus) as exc:
-            client.integrations.start(
-                "nju-mario", run_id=uuid.uuid4(), expected_revision=0
-            )
+            client.integrations.start(run_id=uuid.uuid4(), expected_revision=0)
         assert exc.value.status_code == status
     assert calls == 1
 
@@ -491,7 +516,7 @@ def test_integration_validation_error_is_public_exception() -> None:
         make_client(httpx.MockTransport(handler)) as client,
         pytest.raises(OblidogValidationError),
     ):
-        client.integrations.start("nju-mario", run_id=uuid.uuid4(), expected_revision=0)
+        client.integrations.start(run_id=uuid.uuid4(), expected_revision=0)
 
 
 @pytest.mark.parametrize(
@@ -528,12 +553,9 @@ def test_integration_conflict_is_typed_exception_without_retry(
     with make_client(httpx.MockTransport(handler)) as client:
         with pytest.raises(OblidogConflictError) as exc:
             if operation == "start":
-                client.integrations.start(
-                    "nju-mario", run_id=uuid.uuid4(), expected_revision=0
-                )
+                client.integrations.start(run_id=uuid.uuid4(), expected_revision=0)
             else:
                 client.integrations.finish(
-                    "nju-mario",
                     run_id=uuid.uuid4(),
                     result=IntegrationResult.SUCCESS,
                     changes_detected=False,
@@ -565,7 +587,6 @@ def test_low_level_client_parses_documented_conflict() -> None:
 
     with make_client(httpx.MockTransport(handler)) as client:
         response = integration_start_integration_run.sync_detailed(
-            "nju-mario",
             client=client._client,
             body=IntegrationRunStart(run_id=uuid.uuid4(), expected_revision=0),
         )

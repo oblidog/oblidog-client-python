@@ -1,7 +1,6 @@
 import datetime
 from http import HTTPStatus
 from typing import Any
-from urllib.parse import quote
 
 import httpx
 
@@ -13,7 +12,6 @@ from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
-    category_code: str,
     *,
     from_: datetime.datetime | None | Unset = UNSET,
     to: datetime.datetime | None | Unset = UNSET,
@@ -49,9 +47,7 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": "/api/v1/integration/categories/{category_code}/data-records".format(
-            category_code=quote(str(category_code), safe=""),
-        ),
+        "url": "/api/v1/integration/category/data-records",
         "params": params,
     }
 
@@ -89,7 +85,6 @@ def _build_response(
 
 
 def sync_detailed(
-    category_code: str,
     *,
     client: AuthenticatedClient,
     from_: datetime.datetime | None | Unset = UNSET,
@@ -100,7 +95,6 @@ def sync_detailed(
     """Read Integration Category Data Records
 
     Args:
-        category_code (str):
         from_ (datetime.datetime | None | Unset):
         to (datetime.datetime | None | Unset):
         limit (int | Unset):  Default: 100.
@@ -115,7 +109,6 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
-        category_code=category_code,
         from_=from_,
         to=to,
         limit=limit,
@@ -130,7 +123,6 @@ def sync_detailed(
 
 
 def sync(
-    category_code: str,
     *,
     client: AuthenticatedClient,
     from_: datetime.datetime | None | Unset = UNSET,
@@ -141,7 +133,6 @@ def sync(
     """Read Integration Category Data Records
 
     Args:
-        category_code (str):
         from_ (datetime.datetime | None | Unset):
         to (datetime.datetime | None | Unset):
         limit (int | Unset):  Default: 100.
@@ -156,7 +147,6 @@ def sync(
     """
 
     return sync_detailed(
-        category_code=category_code,
         client=client,
         from_=from_,
         to=to,
@@ -166,7 +156,6 @@ def sync(
 
 
 async def asyncio_detailed(
-    category_code: str,
     *,
     client: AuthenticatedClient,
     from_: datetime.datetime | None | Unset = UNSET,
@@ -177,7 +166,6 @@ async def asyncio_detailed(
     """Read Integration Category Data Records
 
     Args:
-        category_code (str):
         from_ (datetime.datetime | None | Unset):
         to (datetime.datetime | None | Unset):
         limit (int | Unset):  Default: 100.
@@ -192,7 +180,6 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
-        category_code=category_code,
         from_=from_,
         to=to,
         limit=limit,
@@ -205,7 +192,6 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    category_code: str,
     *,
     client: AuthenticatedClient,
     from_: datetime.datetime | None | Unset = UNSET,
@@ -216,7 +202,6 @@ async def asyncio(
     """Read Integration Category Data Records
 
     Args:
-        category_code (str):
         from_ (datetime.datetime | None | Unset):
         to (datetime.datetime | None | Unset):
         limit (int | Unset):  Default: 100.
@@ -232,7 +217,6 @@ async def asyncio(
 
     return (
         await asyncio_detailed(
-            category_code=category_code,
             client=client,
             from_=from_,
             to=to,

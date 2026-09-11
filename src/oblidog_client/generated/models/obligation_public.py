@@ -14,6 +14,7 @@ from ..models.obligation_lifecycle import ObligationLifecycle
 from ..models.value_state import ValueState
 
 if TYPE_CHECKING:
+    from ..models.counterparty_summary_public import CounterpartySummaryPublic
     from ..models.obligation_period_public import ObligationPeriodPublic
 
 
@@ -28,6 +29,8 @@ class ObligationPublic:
         amount_state (ValueState):
         category_code (str):
         category_id (UUID):
+        counterparty (CounterpartySummaryPublic | None):
+        counterparty_id (None | UUID):
         created_at (datetime.datetime):
         currency (None | str):
         current_amount (None | str):
@@ -53,6 +56,8 @@ class ObligationPublic:
     amount_state: ValueState
     category_code: str
     category_id: UUID
+    counterparty: CounterpartySummaryPublic | None
+    counterparty_id: None | UUID
     created_at: datetime.datetime
     currency: None | str
     current_amount: None | str
@@ -75,6 +80,8 @@ class ObligationPublic:
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        from ..models.counterparty_summary_public import CounterpartySummaryPublic
+
         amount_source = self.amount_source.value
 
         amount_state = self.amount_state.value
@@ -82,6 +89,18 @@ class ObligationPublic:
         category_code = self.category_code
 
         category_id = str(self.category_id)
+
+        counterparty: dict[str, Any] | None
+        if isinstance(self.counterparty, CounterpartySummaryPublic):
+            counterparty = self.counterparty.to_dict()
+        else:
+            counterparty = self.counterparty
+
+        counterparty_id: None | str
+        if isinstance(self.counterparty_id, UUID):
+            counterparty_id = str(self.counterparty_id)
+        else:
+            counterparty_id = self.counterparty_id
 
         created_at = self.created_at.isoformat()
 
@@ -144,6 +163,8 @@ class ObligationPublic:
                 "amount_state": amount_state,
                 "category_code": category_code,
                 "category_id": category_id,
+                "counterparty": counterparty,
+                "counterparty_id": counterparty_id,
                 "created_at": created_at,
                 "currency": currency,
                 "current_amount": current_amount,
@@ -170,6 +191,7 @@ class ObligationPublic:
 
     @classmethod
     def from_dict(cls, src_dict: Mapping[str, Any]) -> Self:
+        from ..models.counterparty_summary_public import CounterpartySummaryPublic
         from ..models.obligation_period_public import ObligationPeriodPublic
 
         d = dict(src_dict)
@@ -180,6 +202,36 @@ class ObligationPublic:
         category_code = d.pop("category_code")
 
         category_id = UUID(d.pop("category_id"))
+
+        def _parse_counterparty(data: object) -> CounterpartySummaryPublic | None:
+            if data is None:
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                counterparty_type_0 = CounterpartySummaryPublic.from_dict(data)
+
+                return counterparty_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(CounterpartySummaryPublic | None, data)
+
+        counterparty = _parse_counterparty(d.pop("counterparty"))
+
+        def _parse_counterparty_id(data: object) -> None | UUID:
+            if data is None:
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                counterparty_id_type_0 = UUID(data)
+
+                return counterparty_id_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(None | UUID, data)
+
+        counterparty_id = _parse_counterparty_id(d.pop("counterparty_id"))
 
         created_at = datetime.datetime.fromisoformat(d.pop("created_at"))
 
@@ -280,6 +332,8 @@ class ObligationPublic:
             amount_state=amount_state,
             category_code=category_code,
             category_id=category_id,
+            counterparty=counterparty,
+            counterparty_id=counterparty_id,
             created_at=created_at,
             currency=currency,
             current_amount=current_amount,

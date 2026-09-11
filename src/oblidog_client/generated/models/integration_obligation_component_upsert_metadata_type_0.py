@@ -6,11 +6,11 @@ from typing import Any, Self, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-T = TypeVar("T", bound="ObligationComponentUpsertMetadataType0")
+T = TypeVar("T", bound="IntegrationObligationComponentUpsertMetadataType0")
 
 
 @_attrs_define
-class ObligationComponentUpsertMetadataType0:
+class IntegrationObligationComponentUpsertMetadataType0:
     """ """
 
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -25,10 +25,10 @@ class ObligationComponentUpsertMetadataType0:
     @classmethod
     def from_dict(cls, src_dict: Mapping[str, Any]) -> Self:
         d = dict(src_dict)
-        obligation_component_upsert_metadata_type_0 = cls()
+        integration_obligation_component_upsert_metadata_type_0 = cls()
 
-        obligation_component_upsert_metadata_type_0.additional_properties = d
-        return obligation_component_upsert_metadata_type_0
+        integration_obligation_component_upsert_metadata_type_0.additional_properties = d
+        return integration_obligation_component_upsert_metadata_type_0
 
     @property
     def additional_keys(self) -> list[str]:

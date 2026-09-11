@@ -15,7 +15,6 @@ def _get_kwargs(
     *,
     year: int | None | Unset = UNSET,
     month: int | None | Unset = UNSET,
-    category_code: None | str | Unset = UNSET,
     lifecycle: None | ObligationLifecycle | Unset = UNSET,
 ) -> dict[str, Any]:
 
@@ -34,13 +33,6 @@ def _get_kwargs(
     else:
         json_month = month
     params["month"] = json_month
-
-    json_category_code: None | str | Unset
-    if isinstance(category_code, Unset):
-        json_category_code = UNSET
-    else:
-        json_category_code = category_code
-    params["category_code"] = json_category_code
 
     json_lifecycle: None | str | Unset
     if isinstance(lifecycle, Unset):
@@ -97,7 +89,6 @@ def sync_detailed(
     client: AuthenticatedClient,
     year: int | None | Unset = UNSET,
     month: int | None | Unset = UNSET,
-    category_code: None | str | Unset = UNSET,
     lifecycle: None | ObligationLifecycle | Unset = UNSET,
 ) -> Response[HTTPValidationError | ObligationsPublic]:
     """Read Integration Obligations
@@ -105,7 +96,6 @@ def sync_detailed(
     Args:
         year (int | None | Unset):
         month (int | None | Unset):
-        category_code (None | str | Unset):
         lifecycle (None | ObligationLifecycle | Unset):
 
     Raises:
@@ -119,7 +109,6 @@ def sync_detailed(
     kwargs = _get_kwargs(
         year=year,
         month=month,
-        category_code=category_code,
         lifecycle=lifecycle,
     )
 
@@ -135,7 +124,6 @@ def sync(
     client: AuthenticatedClient,
     year: int | None | Unset = UNSET,
     month: int | None | Unset = UNSET,
-    category_code: None | str | Unset = UNSET,
     lifecycle: None | ObligationLifecycle | Unset = UNSET,
 ) -> HTTPValidationError | ObligationsPublic | None:
     """Read Integration Obligations
@@ -143,7 +131,6 @@ def sync(
     Args:
         year (int | None | Unset):
         month (int | None | Unset):
-        category_code (None | str | Unset):
         lifecycle (None | ObligationLifecycle | Unset):
 
     Raises:
@@ -158,7 +145,6 @@ def sync(
         client=client,
         year=year,
         month=month,
-        category_code=category_code,
         lifecycle=lifecycle,
     ).parsed
 
@@ -168,7 +154,6 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
     year: int | None | Unset = UNSET,
     month: int | None | Unset = UNSET,
-    category_code: None | str | Unset = UNSET,
     lifecycle: None | ObligationLifecycle | Unset = UNSET,
 ) -> Response[HTTPValidationError | ObligationsPublic]:
     """Read Integration Obligations
@@ -176,7 +161,6 @@ async def asyncio_detailed(
     Args:
         year (int | None | Unset):
         month (int | None | Unset):
-        category_code (None | str | Unset):
         lifecycle (None | ObligationLifecycle | Unset):
 
     Raises:
@@ -190,7 +174,6 @@ async def asyncio_detailed(
     kwargs = _get_kwargs(
         year=year,
         month=month,
-        category_code=category_code,
         lifecycle=lifecycle,
     )
 
@@ -204,7 +187,6 @@ async def asyncio(
     client: AuthenticatedClient,
     year: int | None | Unset = UNSET,
     month: int | None | Unset = UNSET,
-    category_code: None | str | Unset = UNSET,
     lifecycle: None | ObligationLifecycle | Unset = UNSET,
 ) -> HTTPValidationError | ObligationsPublic | None:
     """Read Integration Obligations
@@ -212,7 +194,6 @@ async def asyncio(
     Args:
         year (int | None | Unset):
         month (int | None | Unset):
-        category_code (None | str | Unset):
         lifecycle (None | ObligationLifecycle | Unset):
 
     Raises:
@@ -228,7 +209,6 @@ async def asyncio(
             client=client,
             year=year,
             month=month,
-            category_code=category_code,
             lifecycle=lifecycle,
         )
     ).parsed

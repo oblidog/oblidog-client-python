@@ -6,11 +6,11 @@ from typing import Any, Self, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-T = TypeVar("T", bound="CategoryDataRecordCreateData")
+T = TypeVar("T", bound="IntegrationCategoryDataRecordCreateData")
 
 
 @_attrs_define
-class CategoryDataRecordCreateData:
+class IntegrationCategoryDataRecordCreateData:
     """ """
 
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -25,10 +25,10 @@ class CategoryDataRecordCreateData:
     @classmethod
     def from_dict(cls, src_dict: Mapping[str, Any]) -> Self:
         d = dict(src_dict)
-        category_data_record_create_data = cls()
+        integration_category_data_record_create_data = cls()
 
-        category_data_record_create_data.additional_properties = d
-        return category_data_record_create_data
+        integration_category_data_record_create_data.additional_properties = d
+        return integration_category_data_record_create_data
 
     @property
     def additional_keys(self) -> list[str]:

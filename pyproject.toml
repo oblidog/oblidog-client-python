@@ -28,7 +28,7 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://github.com/oblidog/oblidog-client-python"
-Documentation = "https://github.com/oblidog/oblidog-client-python#readme"
+Documentation = "https://oblidog.github.io/oblidog-client-python/"
 Repository = "https://github.com/oblidog/oblidog-client-python"
 Issues = "https://github.com/oblidog/oblidog-client-python/issues"
 Changelog = "https://github.com/oblidog/oblidog-client-python/releases"
@@ -39,6 +39,10 @@ dev = [
   "pytest>=8.0",
   "ruff>=0.6",
   "twine>=6.1",
+]
+docs = [
+  "mkdocs-material>=9.6",
+  "mkdocstrings[python]>=0.27",
 ]
 
 [build-system]
