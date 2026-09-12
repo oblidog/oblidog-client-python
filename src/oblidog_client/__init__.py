@@ -16,8 +16,14 @@ from .exceptions import (
 from .generated.models.category_data_record_public import CategoryDataRecordPublic
 from .generated.models.category_data_records_public import CategoryDataRecordsPublic
 from .generated.models.category_data_schema_public import CategoryDataSchemaPublic
-from .generated.models.context import Context
 from .generated.models.integration_conflict_code import IntegrationConflictCode
+from .generated.models.integration_context_category_public import (
+    IntegrationContextCategoryPublic,
+)
+from .generated.models.integration_context_integration_public import (
+    IntegrationContextIntegrationPublic,
+)
+from .generated.models.integration_context_public import IntegrationContextPublic
 from .generated.models.integration_execution_state import IntegrationExecutionState
 from .generated.models.integration_health import IntegrationHealth
 from .generated.models.integration_public import IntegrationPublic
@@ -28,14 +34,17 @@ from .generated.models.obligation_components_public import ObligationComponentsP
 from .generated.models.obligation_lifecycle import ObligationLifecycle
 from .generated.models.obligation_public import ObligationPublic
 from .generated.models.obligations_public import ObligationsPublic
+from .period import ObligationPeriod
 
 __all__ = [
     "CategoryDataClient",
     "CategoryDataRecordPublic",
     "CategoryDataRecordsPublic",
     "CategoryDataSchemaPublic",
-    "Context",
     "IntegrationConflictCode",
+    "IntegrationContextCategoryPublic",
+    "IntegrationContextIntegrationPublic",
+    "IntegrationContextPublic",
     "IntegrationExecutionState",
     "IntegrationHealth",
     "IntegrationPublic",
@@ -51,6 +60,7 @@ __all__ = [
     "ObligationComponentPublic",
     "ObligationComponentsPublic",
     "ObligationLifecycle",
+    "ObligationPeriod",
     "ObligationPublic",
     "ObligationsClient",
     "ObligationsPublic",

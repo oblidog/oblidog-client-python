@@ -2,6 +2,8 @@
 
 ::: oblidog_client.ObligationsClient
 
+::: oblidog_client.ObligationPeriod
+
 ::: oblidog_client.ObligationLifecycle
 
 ::: oblidog_client.ObligationPublic
