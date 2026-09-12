@@ -6,4 +6,8 @@
 
 ::: oblidog_client.IntegrationRun
 
-::: oblidog_client.Context
+::: oblidog_client.IntegrationContextPublic
+
+::: oblidog_client.IntegrationContextIntegrationPublic
+
+::: oblidog_client.IntegrationContextCategoryPublic

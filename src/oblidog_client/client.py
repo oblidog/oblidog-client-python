@@ -3,7 +3,6 @@ from __future__ import annotations
 import datetime
 import logging
 import uuid
-from collections.abc import Mapping
 from typing import Any, Self
 
 from .exceptions import OblidogApiError, OblidogConflictError, OblidogValidationError
@@ -65,7 +64,6 @@ from .generated.client import AuthenticatedClient
 from .generated.models.category_data_record_public import CategoryDataRecordPublic
 from .generated.models.category_data_records_public import CategoryDataRecordsPublic
 from .generated.models.category_data_schema_public import CategoryDataSchemaPublic
-from .generated.models.context import Context
 from .generated.models.http_validation_error import HTTPValidationError
 from .generated.models.integration_category_data_record_create import (
     IntegrationCategoryDataRecordCreate,
@@ -74,6 +72,7 @@ from .generated.models.integration_category_data_record_create_data import (
     IntegrationCategoryDataRecordCreateData,
 )
 from .generated.models.integration_conflict_response import IntegrationConflictResponse
+from .generated.models.integration_context_public import IntegrationContextPublic
 from .generated.models.integration_obligation_component_upsert import (
     IntegrationObligationComponentUpsert,
 )
@@ -93,6 +92,7 @@ from .generated.models.obligation_note_append import ObligationNoteAppend
 from .generated.models.obligation_public import ObligationPublic
 from .generated.models.obligations_public import ObligationsPublic
 from .generated.types import UNSET
+from .period import ObligationPeriod
 
 logger = logging.getLogger(__name__)
 
@@ -105,6 +105,12 @@ def _result(value: Any) -> Any:
     if value is None:
         raise OblidogApiError(0, b"API returned no parsed response")
     return value
+
+
+def _period_path(period: ObligationPeriod) -> str:
+    if not isinstance(period, ObligationPeriod):
+        raise TypeError("period must be an ObligationPeriod")
+    return str(period)
 
 
 class ObligationsClient:
@@ -147,22 +153,24 @@ class ObligationsClient:
         )
         return _result(result)
 
-    def get(self, obligation_key: str) -> ObligationPublic:
-        """Return one obligation by its stable integration key.
+    def get(self, period: ObligationPeriod) -> ObligationPublic:
+        """Return one obligation for ``period`` in the key-bound category.
 
         Raises:
-            OblidogValidationError: If the key is invalid.
+            TypeError: If ``period`` is not an :class:`ObligationPeriod`.
             OblidogApiError: If the API cannot return a parsed obligation.
         """
-        return _result(get_api.sync(obligation_key, client=self._client))
+        return _result(get_api.sync(_period_path(period), client=self._client))
 
-    def list_components(self, obligation_key: str) -> ObligationComponentsPublic:
+    def list_components(self, period: ObligationPeriod) -> ObligationComponentsPublic:
         """List components currently attached to an obligation."""
-        return _result(list_components_api.sync(obligation_key, client=self._client))
+        return _result(
+            list_components_api.sync(_period_path(period), client=self._client)
+        )
 
     def upsert_component(
         self,
-        obligation_key: str,
+        period: ObligationPeriod,
         *,
         type: str,
         label: str,
@@ -195,12 +203,14 @@ class ObligationsClient:
             ),
         )
         return _result(
-            upsert_component_api.sync(obligation_key, client=self._client, body=body)
+            upsert_component_api.sync(
+                _period_path(period), client=self._client, body=body
+            )
         )
 
     def update(
         self,
-        obligation_key: str,
+        period: ObligationPeriod,
         *,
         current_amount: float | str | None | Any = UNSET,
         due_date: datetime.date | None | Any = UNSET,
@@ -223,37 +233,39 @@ class ObligationsClient:
             due_date=due_date,
             issue_date=issue_date,
         )
-        return _result(update_api.sync(obligation_key, client=self._client, body=body))
+        return _result(
+            update_api.sync(_period_path(period), client=self._client, body=body)
+        )
 
-    def append_note(self, obligation_key: str, text: str) -> ObligationPublic:
+    def append_note(self, period: ObligationPeriod, text: str) -> ObligationPublic:
         """Append ``text`` to an obligation's existing notes and return it."""
         return _result(
             append_note_api.sync(
-                obligation_key,
+                _period_path(period),
                 client=self._client,
                 body=ObligationNoteAppend(text=text),
             )
         )
 
-    def mark_ready(self, obligation_key: str) -> ObligationPublic:
+    def mark_ready(self, period: ObligationPeriod) -> ObligationPublic:
         """Mark an obligation ready for payment."""
-        return _result(mark_ready_api.sync(obligation_key, client=self._client))
+        return _result(mark_ready_api.sync(_period_path(period), client=self._client))
 
-    def mark_paid(self, obligation_key: str) -> ObligationPublic:
+    def mark_paid(self, period: ObligationPeriod) -> ObligationPublic:
         """Mark an obligation paid."""
-        return _result(mark_paid_api.sync(obligation_key, client=self._client))
+        return _result(mark_paid_api.sync(_period_path(period), client=self._client))
 
-    def cancel(self, obligation_key: str) -> ObligationPublic:
+    def cancel(self, period: ObligationPeriod) -> ObligationPublic:
         """Cancel an obligation."""
-        return _result(cancel_api.sync(obligation_key, client=self._client))
+        return _result(cancel_api.sync(_period_path(period), client=self._client))
 
-    def reopen(self, obligation_key: str) -> ObligationPublic:
+    def reopen(self, period: ObligationPeriod) -> ObligationPublic:
         """Reopen a cancelled or completed obligation."""
-        return _result(reopen_api.sync(obligation_key, client=self._client))
+        return _result(reopen_api.sync(_period_path(period), client=self._client))
 
-    def mark_error(self, obligation_key: str) -> ObligationPublic:
+    def mark_error(self, period: ObligationPeriod) -> ObligationPublic:
         """Mark an obligation as requiring attention after an integration error."""
-        return _result(mark_error_api.sync(obligation_key, client=self._client))
+        return _result(mark_error_api.sync(_period_path(period), client=self._client))
 
 
 class CategoryDataClient:
@@ -335,7 +347,7 @@ class IntegrationRun:
         self,
         integrations: IntegrationsClient,
         *,
-        context: Context,
+        context: IntegrationContextPublic,
         run_id: uuid.UUID,
     ) -> None:
         self.context = context
@@ -430,11 +442,12 @@ class IntegrationsClient:
     def __init__(self, client: AuthenticatedClient) -> None:
         self._client = client
 
-    def context(self) -> Context:
+    def context(self) -> IntegrationContextPublic:
         """Return context associated with the authenticated integration API key.
 
-        The returned mapping includes an ``integration`` object whose current
-        ``revision`` is used by :meth:`run` for optimistic locking.
+        The returned object includes the integration and category selected by
+        the API key. Its current revision is used by :meth:`run` for
+        optimistic locking.
         """
         return _result(read_context_api.sync(client=self._client))
 
@@ -458,10 +471,7 @@ class IntegrationsClient:
             OblidogConflictError: If another worker has changed state first.
         """
         context = self.context()
-        integration = context.additional_properties.get("integration")
-        if not isinstance(integration, Mapping):
-            raise TypeError("integration context must contain an 'integration' object")
-        expected_revision = integration.get("revision")
+        expected_revision = context.integration.revision
         if not isinstance(expected_revision, int) or isinstance(
             expected_revision, bool
         ):

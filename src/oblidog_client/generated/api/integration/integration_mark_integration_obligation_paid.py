@@ -12,13 +12,13 @@ from ...types import Response
 
 
 def _get_kwargs(
-    obligation_key: str,
+    period: str,
 ) -> dict[str, Any]:
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": "/api/v1/integration/obligations/{obligation_key}/mark-paid".format(
-            obligation_key=quote(str(obligation_key), safe=""),
+        "url": "/api/v1/integration/obligations/{period}/mark-paid".format(
+            period=quote(str(period), safe=""),
         ),
     }
 
@@ -56,14 +56,15 @@ def _build_response(
 
 
 def sync_detailed(
-    obligation_key: str,
+    period: str,
     *,
     client: AuthenticatedClient,
 ) -> Response[HTTPValidationError | ObligationPublic]:
     """Mark Integration Obligation Paid
 
     Args:
-        obligation_key (str):
+        period (str): Billing period in YYYY-MM format. Full obligation keys are temporarily
+            accepted for client migration.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -74,7 +75,7 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
-        obligation_key=obligation_key,
+        period=period,
     )
 
     response = client.get_httpx_client().request(
@@ -85,14 +86,15 @@ def sync_detailed(
 
 
 def sync(
-    obligation_key: str,
+    period: str,
     *,
     client: AuthenticatedClient,
 ) -> HTTPValidationError | ObligationPublic | None:
     """Mark Integration Obligation Paid
 
     Args:
-        obligation_key (str):
+        period (str): Billing period in YYYY-MM format. Full obligation keys are temporarily
+            accepted for client migration.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -103,20 +105,21 @@ def sync(
     """
 
     return sync_detailed(
-        obligation_key=obligation_key,
+        period=period,
         client=client,
     ).parsed
 
 
 async def asyncio_detailed(
-    obligation_key: str,
+    period: str,
     *,
     client: AuthenticatedClient,
 ) -> Response[HTTPValidationError | ObligationPublic]:
     """Mark Integration Obligation Paid
 
     Args:
-        obligation_key (str):
+        period (str): Billing period in YYYY-MM format. Full obligation keys are temporarily
+            accepted for client migration.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -127,7 +130,7 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
-        obligation_key=obligation_key,
+        period=period,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -136,14 +139,15 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    obligation_key: str,
+    period: str,
     *,
     client: AuthenticatedClient,
 ) -> HTTPValidationError | ObligationPublic | None:
     """Mark Integration Obligation Paid
 
     Args:
-        obligation_key (str):
+        period (str): Billing period in YYYY-MM format. Full obligation keys are temporarily
+            accepted for client migration.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -155,7 +159,7 @@ async def asyncio(
 
     return (
         await asyncio_detailed(
-            obligation_key=obligation_key,
+            period=period,
             client=client,
         )
     ).parsed

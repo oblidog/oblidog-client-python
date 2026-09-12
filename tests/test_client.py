@@ -11,6 +11,7 @@ from oblidog_client import (
     OblidogClient,
     OblidogValidationError,
     ObligationLifecycle,
+    ObligationPeriod,
 )
 from oblidog_client.generated import errors
 
@@ -65,6 +66,8 @@ COMPONENT = {
     "updated_at": "2026-08-01T10:00:00+00:00",
 }
 
+PERIOD = ObligationPeriod(2026, 8)
+
 
 def make_client(handler: httpx.MockTransport) -> OblidogClient:
     client = OblidogClient(
@@ -77,6 +80,25 @@ def make_client(handler: httpx.MockTransport) -> OblidogClient:
 
 def assert_auth(request: httpx.Request) -> None:
     assert request.headers["Authorization"] == "Bearer fdg_live_test"
+
+
+def test_obligation_period_formats_and_validates_calendar_month() -> None:
+    assert str(ObligationPeriod(2026, 8)) == "2026-08"
+
+    with pytest.raises(ValueError, match="month must be between 1 and 12"):
+        ObligationPeriod(2026, 13)
+    with pytest.raises(ValueError, match="year must be between 1 and 9999"):
+        ObligationPeriod(0, 8)
+    with pytest.raises(TypeError, match="month must be an integer"):
+        ObligationPeriod(2026, True)
+
+
+def test_obligation_facade_rejects_untyped_period() -> None:
+    with (
+        make_client(httpx.MockTransport(lambda _: httpx.Response(500))) as client,
+        pytest.raises(TypeError, match="period must be an ObligationPeriod"),
+    ):
+        client.obligations.get("ENRG-2026-08")  # type: ignore[arg-type]
 
 
 def test_list_obligations_sends_filters_and_authentication() -> None:
@@ -105,14 +127,14 @@ def test_list_obligations_sends_filters_and_authentication() -> None:
 def test_update_obligation_serializes_only_supplied_values() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         assert request.method == "PATCH"
-        assert request.url.path == "/api/v1/integration/obligations/ENRG-2026-08"
+        assert request.url.path == "/api/v1/integration/obligations/2026-08"
         assert_auth(request)
         assert json.loads(request.content) == {"current_amount": "450.00"}
         return httpx.Response(200, json={**OBLIGATION, "current_amount": "450.00"})
 
     with make_client(httpx.MockTransport(handler)) as client:
         result = client.obligations.update(
-            "ENRG-2026-08",
+            PERIOD,
             current_amount="450.00",
         )
 
@@ -122,7 +144,7 @@ def test_update_obligation_serializes_only_supplied_values() -> None:
 def test_append_note_uses_append_only_endpoint() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         assert request.method == "POST"
-        assert request.url.path == "/api/v1/integration/obligations/ENRG-2026-08/notes"
+        assert request.url.path == "/api/v1/integration/obligations/2026-08/notes"
         assert_auth(request)
         assert json.loads(request.content) == {"text": "Imported invoice FV/123/2026"}
         return httpx.Response(
@@ -132,11 +154,35 @@ def test_append_note_uses_append_only_endpoint() -> None:
 
     with make_client(httpx.MockTransport(handler)) as client:
         result = client.obligations.append_note(
-            "ENRG-2026-08",
+            PERIOD,
             "Imported invoice FV/123/2026",
         )
 
     assert result.notes == "Imported invoice FV/123/2026"
+
+
+def test_obligation_lifecycle_actions_use_period_path() -> None:
+    requests: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        assert_auth(request)
+        return httpx.Response(200, json=OBLIGATION)
+
+    with make_client(httpx.MockTransport(handler)) as client:
+        client.obligations.mark_ready(PERIOD)
+        client.obligations.mark_paid(PERIOD)
+        client.obligations.cancel(PERIOD)
+        client.obligations.reopen(PERIOD)
+        client.obligations.mark_error(PERIOD)
+
+    assert [(request.method, request.url.path) for request in requests] == [
+        ("PATCH", "/api/v1/integration/obligations/2026-08/ready"),
+        ("POST", "/api/v1/integration/obligations/2026-08/mark-paid"),
+        ("POST", "/api/v1/integration/obligations/2026-08/cancel"),
+        ("POST", "/api/v1/integration/obligations/2026-08/reopen"),
+        ("POST", "/api/v1/integration/obligations/2026-08/error"),
+    ]
 
 
 def test_validation_response_becomes_high_level_exception() -> None:
@@ -171,7 +217,7 @@ def test_undocumented_status_is_not_silently_returned_as_none() -> None:
         make_client(httpx.MockTransport(handler)) as client,
         pytest.raises(errors.UnexpectedStatus) as exc_info,
     ):
-        client.obligations.get("ENRG-2026-08")
+        client.obligations.get(PERIOD)
 
     assert exc_info.value.status_code == 500
 
@@ -262,9 +308,9 @@ def test_obligation_components_use_dict_metadata_and_optional_values() -> None:
         return httpx.Response(200, json=COMPONENT)
 
     with make_client(httpx.MockTransport(handler)) as client:
-        components = client.obligations.list_components("ENRG-2026-08")
+        components = client.obligations.list_components(PERIOD)
         component = client.obligations.upsert_component(
-            "ENRG-2026-08",
+            PERIOD,
             type="principal",
             label="August electricity",
             external_id="invoice-line-123",
@@ -318,6 +364,20 @@ INTEGRATION = {
     "health": "never_run",
 }
 
+INTEGRATION_CONTEXT = {
+    "integration": {
+        "id": INTEGRATION["id"],
+        "name": INTEGRATION["name"],
+        "enabled": True,
+        "revision": 0,
+    },
+    "category": {
+        "id": INTEGRATION["category_id"],
+        "code": "ENRG",
+        "name": "Energy",
+    },
+}
+
 
 def test_integration_context_and_start_use_shared_auth_and_caller_run_identity() -> (
     None
@@ -332,7 +392,7 @@ def test_integration_context_and_start_use_shared_auth_and_caller_run_identity()
         assert_auth(request)
         if request.method == "GET":
             assert request.url.path == "/api/v1/integration/context"
-            return httpx.Response(200, json={"integration_id": INTEGRATION["id"]})
+            return httpx.Response(200, json=INTEGRATION_CONTEXT)
         assert request.url.path == "/api/v1/integration/runs/start"
         assert json.loads(request.content) == {
             "run_id": str(run_id),
@@ -353,7 +413,8 @@ def test_integration_context_and_start_use_shared_auth_and_caller_run_identity()
 
     with make_client(httpx.MockTransport(handler)) as client:
         context = client.integrations.context()
-        assert context["integration_id"] == INTEGRATION["id"]
+        assert context.integration.id.hex == INTEGRATION["id"].replace("-", "")
+        assert context.category.code == "ENRG"
         for _ in range(2):
             started = client.integrations.start(run_id=run_id, expected_revision=0)
             assert started.current_run_id == run_id
@@ -375,8 +436,11 @@ def test_integration_run_fetches_context_then_starts_and_finishes() -> None:
             return httpx.Response(
                 200,
                 json={
-                    "integration": {"revision": 4},
-                    "provider": "nju",
+                    **INTEGRATION_CONTEXT,
+                    "integration": {
+                        **INTEGRATION_CONTEXT["integration"],
+                        "revision": 4,
+                    },
                 },
             )
         body = json.loads(request.content)
@@ -396,7 +460,7 @@ def test_integration_run_fetches_context_then_starts_and_finishes() -> None:
         make_client(httpx.MockTransport(handler)) as client,
         client.integrations.run() as run,
     ):
-        assert run.context["provider"] == "nju"
+        assert run.context.category.code == "ENRG"
         finished = run.finish_success(changes_detected=False)
 
     assert finished.revision == 6
@@ -410,17 +474,24 @@ def test_integration_run_fetches_context_then_starts_and_finishes() -> None:
 @pytest.mark.parametrize(
     ("context", "error"),
     [
-        ({}, "integration context must contain an 'integration' object"),
         (
-            {"integration": {}},
+            {
+                **INTEGRATION_CONTEXT,
+                "integration": {
+                    **INTEGRATION_CONTEXT["integration"],
+                    "revision": "4",
+                },
+            },
             "integration context integration.revision must be an integer",
         ),
         (
-            {"integration": {"revision": "4"}},
-            "integration context integration.revision must be an integer",
-        ),
-        (
-            {"integration": {"revision": True}},
+            {
+                **INTEGRATION_CONTEXT,
+                "integration": {
+                    **INTEGRATION_CONTEXT["integration"],
+                    "revision": True,
+                },
+            },
             "integration context integration.revision must be an integer",
         ),
     ],
