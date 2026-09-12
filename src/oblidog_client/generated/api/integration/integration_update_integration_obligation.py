@@ -13,7 +13,7 @@ from ...types import Response
 
 
 def _get_kwargs(
-    obligation_key: str,
+    period: str,
     *,
     body: ObligationIntegrationUpdate,
 ) -> dict[str, Any]:
@@ -21,8 +21,8 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "patch",
-        "url": "/api/v1/integration/obligations/{obligation_key}".format(
-            obligation_key=quote(str(obligation_key), safe=""),
+        "url": "/api/v1/integration/obligations/{period}".format(
+            period=quote(str(period), safe=""),
         ),
     }
 
@@ -65,7 +65,7 @@ def _build_response(
 
 
 def sync_detailed(
-    obligation_key: str,
+    period: str,
     *,
     client: AuthenticatedClient,
     body: ObligationIntegrationUpdate,
@@ -73,7 +73,8 @@ def sync_detailed(
     """Update Integration Obligation
 
     Args:
-        obligation_key (str):
+        period (str): Billing period in YYYY-MM format. Full obligation keys are temporarily
+            accepted for client migration.
         body (ObligationIntegrationUpdate): Values an API-key authenticated integration may
             update.
 
@@ -86,7 +87,7 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
-        obligation_key=obligation_key,
+        period=period,
         body=body,
     )
 
@@ -98,7 +99,7 @@ def sync_detailed(
 
 
 def sync(
-    obligation_key: str,
+    period: str,
     *,
     client: AuthenticatedClient,
     body: ObligationIntegrationUpdate,
@@ -106,7 +107,8 @@ def sync(
     """Update Integration Obligation
 
     Args:
-        obligation_key (str):
+        period (str): Billing period in YYYY-MM format. Full obligation keys are temporarily
+            accepted for client migration.
         body (ObligationIntegrationUpdate): Values an API-key authenticated integration may
             update.
 
@@ -119,14 +121,14 @@ def sync(
     """
 
     return sync_detailed(
-        obligation_key=obligation_key,
+        period=period,
         client=client,
         body=body,
     ).parsed
 
 
 async def asyncio_detailed(
-    obligation_key: str,
+    period: str,
     *,
     client: AuthenticatedClient,
     body: ObligationIntegrationUpdate,
@@ -134,7 +136,8 @@ async def asyncio_detailed(
     """Update Integration Obligation
 
     Args:
-        obligation_key (str):
+        period (str): Billing period in YYYY-MM format. Full obligation keys are temporarily
+            accepted for client migration.
         body (ObligationIntegrationUpdate): Values an API-key authenticated integration may
             update.
 
@@ -147,7 +150,7 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
-        obligation_key=obligation_key,
+        period=period,
         body=body,
     )
 
@@ -157,7 +160,7 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    obligation_key: str,
+    period: str,
     *,
     client: AuthenticatedClient,
     body: ObligationIntegrationUpdate,
@@ -165,7 +168,8 @@ async def asyncio(
     """Update Integration Obligation
 
     Args:
-        obligation_key (str):
+        period (str): Billing period in YYYY-MM format. Full obligation keys are temporarily
+            accepted for client migration.
         body (ObligationIntegrationUpdate): Values an API-key authenticated integration may
             update.
 
@@ -179,7 +183,7 @@ async def asyncio(
 
     return (
         await asyncio_detailed(
-            obligation_key=obligation_key,
+            period=period,
             client=client,
             body=body,
         )

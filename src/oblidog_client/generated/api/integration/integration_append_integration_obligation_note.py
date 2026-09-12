@@ -13,7 +13,7 @@ from ...types import Response
 
 
 def _get_kwargs(
-    obligation_key: str,
+    period: str,
     *,
     body: ObligationNoteAppend,
 ) -> dict[str, Any]:
@@ -21,8 +21,8 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": "/api/v1/integration/obligations/{obligation_key}/notes".format(
-            obligation_key=quote(str(obligation_key), safe=""),
+        "url": "/api/v1/integration/obligations/{period}/notes".format(
+            period=quote(str(period), safe=""),
         ),
     }
 
@@ -65,7 +65,7 @@ def _build_response(
 
 
 def sync_detailed(
-    obligation_key: str,
+    period: str,
     *,
     client: AuthenticatedClient,
     body: ObligationNoteAppend,
@@ -73,7 +73,8 @@ def sync_detailed(
     """Append Integration Obligation Note
 
     Args:
-        obligation_key (str):
+        period (str): Billing period in YYYY-MM format. Full obligation keys are temporarily
+            accepted for client migration.
         body (ObligationNoteAppend):
 
     Raises:
@@ -85,7 +86,7 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
-        obligation_key=obligation_key,
+        period=period,
         body=body,
     )
 
@@ -97,7 +98,7 @@ def sync_detailed(
 
 
 def sync(
-    obligation_key: str,
+    period: str,
     *,
     client: AuthenticatedClient,
     body: ObligationNoteAppend,
@@ -105,7 +106,8 @@ def sync(
     """Append Integration Obligation Note
 
     Args:
-        obligation_key (str):
+        period (str): Billing period in YYYY-MM format. Full obligation keys are temporarily
+            accepted for client migration.
         body (ObligationNoteAppend):
 
     Raises:
@@ -117,14 +119,14 @@ def sync(
     """
 
     return sync_detailed(
-        obligation_key=obligation_key,
+        period=period,
         client=client,
         body=body,
     ).parsed
 
 
 async def asyncio_detailed(
-    obligation_key: str,
+    period: str,
     *,
     client: AuthenticatedClient,
     body: ObligationNoteAppend,
@@ -132,7 +134,8 @@ async def asyncio_detailed(
     """Append Integration Obligation Note
 
     Args:
-        obligation_key (str):
+        period (str): Billing period in YYYY-MM format. Full obligation keys are temporarily
+            accepted for client migration.
         body (ObligationNoteAppend):
 
     Raises:
@@ -144,7 +147,7 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
-        obligation_key=obligation_key,
+        period=period,
         body=body,
     )
 
@@ -154,7 +157,7 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    obligation_key: str,
+    period: str,
     *,
     client: AuthenticatedClient,
     body: ObligationNoteAppend,
@@ -162,7 +165,8 @@ async def asyncio(
     """Append Integration Obligation Note
 
     Args:
-        obligation_key (str):
+        period (str): Billing period in YYYY-MM format. Full obligation keys are temporarily
+            accepted for client migration.
         body (ObligationNoteAppend):
 
     Raises:
@@ -175,7 +179,7 @@ async def asyncio(
 
     return (
         await asyncio_detailed(
-            obligation_key=obligation_key,
+            period=period,
             client=client,
             body=body,
         )
