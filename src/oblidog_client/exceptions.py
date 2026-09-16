@@ -8,7 +8,13 @@ class OblidogError(Exception):
 
 
 class OblidogConnectionError(OblidogError):
-    """The Oblidog API could not be reached due to a transport failure."""
+    """The Oblidog API is temporarily unreachable.
+
+    Raised when an HTTP transport failure cannot be recovered, or when a
+    retryable HTTP 502, 503, or 504 response persists after all configured
+    attempts. The original `httpx.TransportError` is preserved as the exception
+    cause when the failure originates in the HTTP transport.
+    """
 
 
 class OblidogApiError(OblidogError):
