@@ -4,12 +4,12 @@ from .client import (
     CategoryDataClient,
     IntegrationRun,
     IntegrationsClient,
-    OblidogClient,
     ObligationsClient,
 )
 from .exceptions import (
     OblidogApiError,
     OblidogConflictError,
+    OblidogConnectionError,
     OblidogError,
     OblidogValidationError,
 )
@@ -35,6 +35,7 @@ from .generated.models.obligation_lifecycle import ObligationLifecycle
 from .generated.models.obligation_public import ObligationPublic
 from .generated.models.obligations_public import ObligationsPublic
 from .period import ObligationPeriod
+from .resilience import OblidogClient, RetryPolicy
 
 __all__ = [
     "CategoryDataClient",
@@ -55,6 +56,7 @@ __all__ = [
     "OblidogApiError",
     "OblidogClient",
     "OblidogConflictError",
+    "OblidogConnectionError",
     "OblidogError",
     "OblidogValidationError",
     "ObligationComponentPublic",
@@ -64,4 +66,5 @@ __all__ = [
     "ObligationPublic",
     "ObligationsClient",
     "ObligationsPublic",
+    "RetryPolicy",
 ]
