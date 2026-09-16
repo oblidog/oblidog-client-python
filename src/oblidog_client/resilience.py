@@ -19,11 +19,20 @@ _RETRYABLE_STATUS_CODES = frozenset({502, 503, 504})
 
 @dataclass(frozen=True, slots=True)
 class RetryPolicy:
-    """Retry settings used by the high-level Oblidog client.
+    """Configure retries for transient Oblidog API failures.
 
     Retries are deliberately limited to read-only HTTP methods. Mutating
     requests are attempted once because a transport failure can happen after
     the server has already applied the change.
+
+    Attributes:
+        enabled: Whether automatic retries are enabled. Connection failures are
+            still translated to `OblidogConnectionError` when retries are disabled.
+        max_attempts: Maximum number of attempts, including the initial request.
+            Must be at least 1.
+        initial_delay: Initial backoff delay in seconds before the first retry.
+        max_delay: Maximum delay in seconds between attempts, including jitter.
+        jitter: Maximum random jitter in seconds added to each backoff delay.
     """
 
     enabled: bool = True
@@ -110,7 +119,23 @@ class ResilientTransport(httpx.BaseTransport):
 
 
 class OblidogClient(BaseOblidogClient):
-    """High-level client with resilient, idempotency-aware HTTP transport."""
+    """High-level Oblidog API client with resilient transport handling.
+
+    Read-only requests (`GET`, `HEAD`, and `OPTIONS`) retry transient transport
+    failures and HTTP 502, 503, and 504 responses according to `retry_policy`.
+    Mutating requests are never automatically replayed because the server may
+    have applied a change before the client observed a transport failure.
+
+    Args:
+        base_url: Base URL of the Oblidog API.
+        api_key: Integration API key used for authentication.
+        timeout: Request timeout in seconds.
+        retry_policy: Retry configuration. When omitted, `RetryPolicy()` is used.
+
+    Raises:
+        OblidogConnectionError: When a transport failure cannot be recovered or
+            a retryable server response remains unavailable after all attempts.
+    """
 
     def __init__(
         self,
