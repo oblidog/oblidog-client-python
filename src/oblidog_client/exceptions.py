@@ -7,6 +7,10 @@ class OblidogError(Exception):
     """Base exception raised by the high-level Oblidog client."""
 
 
+class OblidogConnectionError(OblidogError):
+    """The Oblidog API could not be reached due to a transport failure."""
+
+
 class OblidogApiError(OblidogError):
     """The Oblidog API returned an unexpected response."""
 
