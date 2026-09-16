@@ -7,3 +7,5 @@
 ::: oblidog_client.OblidogValidationError
 
 ::: oblidog_client.OblidogConflictError
+
+::: oblidog_client.OblidogConnectionError

@@ -2,6 +2,8 @@
 
 ::: oblidog_client.OblidogClient
 
+::: oblidog_client.RetryPolicy
+
 ::: oblidog_client.IntegrationsClient
 
 ::: oblidog_client.IntegrationRun

@@ -30,8 +30,10 @@ EXPECTED_PUBLIC_API = {
     "OblidogApiError",
     "OblidogClient",
     "OblidogConflictError",
+    "OblidogConnectionError",
     "OblidogError",
     "OblidogValidationError",
+    "RetryPolicy",
 }
 
 
