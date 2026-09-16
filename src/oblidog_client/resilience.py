@@ -61,7 +61,9 @@ class ResilientTransport(httpx.BaseTransport):
 
     def handle_request(self, request: httpx.Request) -> httpx.Response:
         retry_safe = request.method.upper() in _RETRYABLE_METHODS
-        attempts = self._policy.max_attempts if self._policy.enabled and retry_safe else 1
+        attempts = (
+            self._policy.max_attempts if self._policy.enabled and retry_safe else 1
+        )
 
         for attempt in range(1, attempts + 1):
             try:
