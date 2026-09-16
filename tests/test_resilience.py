@@ -53,6 +53,26 @@ def test_retries_retryable_gateway_response() -> None:
     assert attempts == 2
 
 
+def test_gateway_exhaustion_raises_public_connection_error() -> None:
+    attempts = 0
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        nonlocal attempts
+        attempts += 1
+        return httpx.Response(503, request=req)
+
+    transport = ResilientTransport(
+        policy=RetryPolicy(max_attempts=2, initial_delay=0, jitter=0),
+        transport=httpx.MockTransport(handler),
+        sleep=lambda _: None,
+    )
+
+    with pytest.raises(OblidogConnectionError, match="HTTP 503"):
+        transport.handle_request(request())
+
+    assert attempts == 2
+
+
 def test_exhaustion_raises_public_connection_error_with_cause() -> None:
     def handler(req: httpx.Request) -> httpx.Response:
         raise httpx.ReadTimeout("too slow", request=req)
@@ -123,6 +143,30 @@ def test_normal_client_error_is_not_retried() -> None:
 
     assert transport.handle_request(request()).status_code == 422
     assert attempts == 1
+
+
+def test_retry_delay_never_exceeds_max_delay() -> None:
+    sleeps: list[float] = []
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError("offline", request=req)
+
+    transport = ResilientTransport(
+        policy=RetryPolicy(
+            max_attempts=2,
+            initial_delay=4,
+            max_delay=4,
+            jitter=1,
+        ),
+        transport=httpx.MockTransport(handler),
+        sleep=sleeps.append,
+        random_=lambda: 1.0,
+    )
+
+    with pytest.raises(OblidogConnectionError):
+        transport.handle_request(request())
+
+    assert sleeps == [4]
 
 
 def test_policy_validates_configuration() -> None:
