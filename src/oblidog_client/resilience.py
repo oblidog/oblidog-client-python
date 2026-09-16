@@ -72,8 +72,15 @@ class ResilientTransport(httpx.BaseTransport):
                 self._wait(request, attempt, exc.__class__.__name__)
                 continue
 
-            if response.status_code not in _RETRYABLE_STATUS_CODES or attempt >= attempts:
+            if response.status_code not in _RETRYABLE_STATUS_CODES:
                 return response
+            if attempt >= attempts:
+                status_code = response.status_code
+                response.close()
+                raise OblidogConnectionError(
+                    f"Oblidog API remained unavailable after {attempts} attempt(s): "
+                    f"HTTP {status_code}"
+                )
 
             response.close()
             self._wait(request, attempt, f"HTTP {response.status_code}")
@@ -81,11 +88,11 @@ class ResilientTransport(httpx.BaseTransport):
         raise AssertionError("retry loop exited unexpectedly")
 
     def _wait(self, request: httpx.Request, attempt: int, reason: str) -> None:
-        base = min(
-            self._policy.initial_delay * (2 ** (attempt - 1)),
+        exponential = self._policy.initial_delay * (2 ** (attempt - 1))
+        delay = min(
+            exponential + (self._policy.jitter * self._random()),
             self._policy.max_delay,
         )
-        delay = base + (self._policy.jitter * self._random())
         logger.warning(
             "Retrying Oblidog API request method=%s attempt=%d/%d delay=%.2fs reason=%s",
             request.method,
