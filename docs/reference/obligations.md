@@ -16,4 +16,12 @@
 
 ::: oblidog_client.MutationResult
 
+`MutationResult` indicates what the component upsert actually changed:
+
+| Value | Meaning |
+| --- | --- |
+| `created` | A new component was created. |
+| `updated` | An existing component was changed. |
+| `unchanged` | The submitted component matched the stored component, so no change was persisted. |
+
 ::: oblidog_client.ObligationComponentsPublic
