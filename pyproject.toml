@@ -67,3 +67,6 @@ name = "cz_conventional_commits"
 version_provider = "pep621"
 tag_format = "v$version"
 annotated_tag = true
+update_changelog_on_bump = true
+changelog_incremental = true
+changelog_file = "CHANGELOG.md"

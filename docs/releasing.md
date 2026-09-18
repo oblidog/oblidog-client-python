@@ -34,10 +34,10 @@ A manual dispatch can never invoke the production publication job. TestPyPI uses
 
 ## Production release
 
-1. Merge releasable Conventional Commits to `main`. The **Prepare release** workflow creates a `release/vX.Y.Z` pull request with the version bump.
-2. Review and merge that pull request after its checks pass. The workflow creates the matching `vX.Y.Z` tag on `main`.
-3. Publish a GitHub Release for that tag.
+1. Merge releasable Conventional Commits to `main`. The **Prepare release** workflow creates a `release/vX.Y.Z` pull request with the version bump and updated `CHANGELOG.md`.
+2. Review and merge that pull request after its checks pass. The workflow creates the matching `vX.Y.Z` tag on `main` and a draft GitHub Release containing that version's changelog section.
+3. Review and publish the draft GitHub Release.
 4. Review the `pypi` environment deployment and approve it.
 5. Verify the release at `https://pypi.org/project/oblidog-client/`.
 
-The workflow accepts canonical PEP 440 stable versions and release candidates (`X.Y.Z` and `X.Y.ZrcN`). It rejects malformed tags, tag/project version mismatches, and versions that are not newer than the latest version already present on the selected index. A single global concurrency group serializes all package release runs. The build job creates and tests the distributions once; publication jobs download those exact workflow artifacts.
+Publishing the draft is the explicit production trigger; creating the draft does not publish the package. The workflow accepts canonical PEP 440 stable versions and release candidates (`X.Y.Z` and `X.Y.ZrcN`). It rejects malformed tags, tag/project version mismatches, and versions that are not newer than the latest version already present on the selected index. A single global concurrency group serializes all package release runs. The build job creates and tests the distributions once; publication jobs download those exact workflow artifacts.
