@@ -12,4 +12,8 @@
 
 ::: oblidog_client.ObligationComponentPublic
 
+::: oblidog_client.ObligationComponentUpsertResult
+
+::: oblidog_client.MutationResult
+
 ::: oblidog_client.ObligationComponentsPublic

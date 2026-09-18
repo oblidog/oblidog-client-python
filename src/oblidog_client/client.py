@@ -84,7 +84,9 @@ from .generated.models.integration_result import IntegrationResult
 from .generated.models.integration_run_error import IntegrationRunError
 from .generated.models.integration_run_finish import IntegrationRunFinish
 from .generated.models.integration_run_start import IntegrationRunStart
-from .generated.models.obligation_component_public import ObligationComponentPublic
+from .generated.models.obligation_component_upsert_result import (
+    ObligationComponentUpsertResult,
+)
 from .generated.models.obligation_components_public import ObligationComponentsPublic
 from .generated.models.obligation_integration_update import ObligationIntegrationUpdate
 from .generated.models.obligation_lifecycle import ObligationLifecycle
@@ -177,7 +179,7 @@ class ObligationsClient:
         external_id: str,
         amount: float | str | None | Any = UNSET,
         metadata: dict[str, Any] | None | Any = UNSET,
-    ) -> ObligationComponentPublic:
+    ) -> ObligationComponentUpsertResult:
         """Create or update a component identified by ``external_id``.
 
         ``amount`` and ``metadata`` distinguish omission from explicit
@@ -186,7 +188,7 @@ class ObligationsClient:
         so repeated provider imports update the same component.
 
         Returns:
-            The created or updated component.
+            The component and whether it was created, updated, or unchanged.
 
         Raises:
             OblidogValidationError: If the request is invalid.
