@@ -305,7 +305,7 @@ def test_obligation_components_use_dict_metadata_and_optional_values() -> None:
             "metadata": {"invoice_number": "FV/123/2026"},
             "external_id": "invoice-line-123",
         }
-        return httpx.Response(200, json=COMPONENT)
+        return httpx.Response(200, json={"component": COMPONENT, "result": "unchanged"})
 
     with make_client(httpx.MockTransport(handler)) as client:
         components = client.obligations.list_components(PERIOD)
@@ -319,7 +319,8 @@ def test_obligation_components_use_dict_metadata_and_optional_values() -> None:
         )
 
     assert components.count == 1
-    assert component.metadata.to_dict() == {"invoice_number": "FV/123/2026"}
+    assert component.component.metadata.to_dict() == {"invoice_number": "FV/123/2026"}
+    assert component.result.value == "unchanged"
     assert requests[0].url.path.endswith("/components")
     assert requests[1].url.path.endswith("/components/upsert")
 

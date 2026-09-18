@@ -29,7 +29,11 @@ from .generated.models.integration_health import IntegrationHealth
 from .generated.models.integration_public import IntegrationPublic
 from .generated.models.integration_result import IntegrationResult
 from .generated.models.integration_run_error import IntegrationRunError
+from .generated.models.mutation_result import MutationResult
 from .generated.models.obligation_component_public import ObligationComponentPublic
+from .generated.models.obligation_component_upsert_result import (
+    ObligationComponentUpsertResult,
+)
 from .generated.models.obligation_components_public import ObligationComponentsPublic
 from .generated.models.obligation_lifecycle import ObligationLifecycle
 from .generated.models.obligation_public import ObligationPublic
@@ -53,6 +57,7 @@ __all__ = [
     "IntegrationRun",
     "IntegrationRunError",
     "IntegrationsClient",
+    "MutationResult",
     "OblidogApiError",
     "OblidogClient",
     "OblidogConflictError",
@@ -60,6 +65,7 @@ __all__ = [
     "OblidogError",
     "OblidogValidationError",
     "ObligationComponentPublic",
+    "ObligationComponentUpsertResult",
     "ObligationComponentsPublic",
     "ObligationLifecycle",
     "ObligationPeriod",

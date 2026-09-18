@@ -34,10 +34,12 @@ from .integration_result import IntegrationResult
 from .integration_run_error import IntegrationRunError
 from .integration_run_finish import IntegrationRunFinish
 from .integration_run_start import IntegrationRunStart
+from .mutation_result import MutationResult
 from .obligation_component_public import ObligationComponentPublic
 from .obligation_component_public_metadata_type_0 import (
     ObligationComponentPublicMetadataType0,
 )
+from .obligation_component_upsert_result import ObligationComponentUpsertResult
 from .obligation_components_public import ObligationComponentsPublic
 from .obligation_integration_update import ObligationIntegrationUpdate
 from .obligation_lifecycle import ObligationLifecycle
@@ -77,8 +79,10 @@ __all__ = (
     "IntegrationRunError",
     "IntegrationRunFinish",
     "IntegrationRunStart",
+    "MutationResult",
     "ObligationComponentPublic",
     "ObligationComponentPublicMetadataType0",
+    "ObligationComponentUpsertResult",
     "ObligationComponentsPublic",
     "ObligationIntegrationUpdate",
     "ObligationLifecycle",
