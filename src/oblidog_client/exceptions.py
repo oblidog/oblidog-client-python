@@ -31,12 +31,30 @@ class OblidogApiError(OblidogError):
 
 
 class OblidogValidationError(OblidogError):
-    """The Oblidog API rejected request parameters or payload."""
+    """The API rejected request parameters or payload with HTTP 422.
+
+    ``status_code`` and ``content`` preserve the original HTTP error response.
+    """
+
+    def __init__(
+        self, message: str, *, status_code: int = 422, content: bytes = b""
+    ) -> None:
+        self.status_code = status_code
+        self.content = content
+        super().__init__(message)
 
 
 class OblidogConflictError(OblidogApiError):
-    """A registry operation conflicted with the current state or revision."""
+    """A registry operation conflicted with the current state or revision.
 
-    def __init__(self, code: IntegrationConflictCode) -> None:
+    ``code`` retains the typed integration conflict reason. ``content`` keeps
+    the complete response body, including top-level error metadata and params.
+    """
+
+    def __init__(
+        self, code: IntegrationConflictCode, *, content: bytes | None = None
+    ) -> None:
         self.code = code
-        super().__init__(409, json.dumps({"detail": {"code": code.value}}).encode())
+        if content is None:
+            content = json.dumps({"detail": {"code": code.value}}).encode()
+        super().__init__(409, content)

@@ -13,7 +13,6 @@ from oblidog_client import (
     ObligationLifecycle,
     ObligationPeriod,
 )
-from oblidog_client.generated import errors
 
 OBLIGATION = {
     "id": "11111111-1111-1111-1111-111111111111",
@@ -191,13 +190,14 @@ def test_validation_response_becomes_high_level_exception() -> None:
         return httpx.Response(
             422,
             json={
+                "code": "request_validation_failed",
                 "detail": [
                     {
                         "loc": ["query", "month"],
                         "msg": "Input should be less than or equal to 12",
                         "type": "less_than_equal",
                     }
-                ]
+                ],
             },
         )
 
@@ -211,15 +211,65 @@ def test_validation_response_becomes_high_level_exception() -> None:
 def test_undocumented_status_is_not_silently_returned_as_none() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         assert_auth(request)
-        return httpx.Response(500, text="boom")
+        return httpx.Response(418, text="boom")
 
     with (
         make_client(httpx.MockTransport(handler)) as client,
-        pytest.raises(errors.UnexpectedStatus) as exc_info,
+        pytest.raises(OblidogApiError) as exc_info,
     ):
         client.obligations.get(PERIOD)
 
-    assert exc_info.value.status_code == 500
+    assert exc_info.value.status_code == 418
+    assert exc_info.value.content == b"boom"
+    assert exc_info.value.__cause__ is not None
+
+
+@pytest.mark.parametrize(
+    ("status", "code"),
+    [
+        (400, "request_invalid"),
+        (401, "auth_invalid_api_key"),
+        (403, "permission_denied"),
+        (404, "resource_not_found"),
+        (409, "obligation_conflict"),
+        (413, "demo_request_too_large"),
+        (422, "request_validation_failed"),
+        (500, "internal_error"),
+        (503, "service_unavailable"),
+    ],
+)
+@pytest.mark.parametrize("operation", ["list", "mark_paid", "latest", "context"])
+def test_documented_errors_preserve_status_and_body(
+    status: int, code: str, operation: str
+) -> None:
+    calls = 0
+    payload = {
+        "code": code,
+        "detail": "Request rejected",
+        "params": {"field": "amount"},
+    }
+    response = httpx.Response(status, json=payload)
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        assert_auth(request)
+        return response
+
+    expected = OblidogValidationError if status == 422 else OblidogApiError
+    with make_client(httpx.MockTransport(handler)) as client:
+        with pytest.raises(expected) as exc:
+            if operation == "list":
+                client.obligations.list()
+            elif operation == "mark_paid":
+                client.obligations.mark_paid(PERIOD)
+            elif operation == "latest":
+                client.category_data.latest()
+            else:
+                client.integrations.context()
+        assert exc.value.status_code == status
+        assert exc.value.content == response.content
+    assert calls == 1
 
 
 def test_category_data_schema_and_list_send_expected_requests() -> None:
@@ -281,11 +331,13 @@ def test_category_data_create_wraps_dict_and_preserves_explicit_none() -> None:
 
 def test_category_data_latest_validation_becomes_high_level_exception() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
-        return httpx.Response(422, json={"detail": []})
+        return httpx.Response(
+            422, json={"code": "request_validation_failed", "detail": []}
+        )
 
     with (
         make_client(httpx.MockTransport(handler)) as client,
-        pytest.raises(errors.UnexpectedStatus),
+        pytest.raises(OblidogValidationError),
     ):
         client.category_data.latest()
 
@@ -327,14 +379,14 @@ def test_obligation_components_use_dict_metadata_and_optional_values() -> None:
 
 def test_missing_parsed_response_becomes_api_error() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
-        return httpx.Response(500, text="boom")
+        return httpx.Response(204)
 
     with make_client(httpx.MockTransport(handler)) as client:
         client._client.raise_on_unexpected_status = False
         with pytest.raises(OblidogApiError) as exc_info:
             client.category_data.latest()
 
-    assert exc_info.value.status_code == 0
+    assert exc_info.value.status_code == 204
 
 
 INTEGRATION = {
@@ -600,10 +652,16 @@ def test_integration_reporting_propagates_errors_without_retry(status: int) -> N
         nonlocal calls
         calls += 1
         assert_auth(request)
-        return httpx.Response(status, json={"detail": {"code": "revision_conflict"}})
+        return httpx.Response(
+            status,
+            json={
+                "code": "integration_conflict",
+                "detail": {"code": "revision_conflict"},
+            },
+        )
 
     with make_client(httpx.MockTransport(handler)) as client:
-        with pytest.raises(errors.UnexpectedStatus) as exc:
+        with pytest.raises(OblidogApiError) as exc:
             client.integrations.start(run_id=uuid.uuid4(), expected_revision=0)
         assert exc.value.status_code == status
     assert calls == 1
@@ -617,9 +675,10 @@ def test_integration_validation_error_is_public_exception() -> None:
         return httpx.Response(
             422,
             json={
+                "code": "request_validation_failed",
                 "detail": [
                     {"loc": ["body", "run_id"], "msg": "invalid", "type": "value_error"}
-                ]
+                ],
             },
         )
 
@@ -659,7 +718,14 @@ def test_integration_conflict_is_typed_exception_without_retry(
         calls += 1
         assert_auth(request)
         assert request.url.path.endswith("/" + operation)
-        return httpx.Response(409, json={"detail": {"code": code}})
+        return httpx.Response(
+            409,
+            json={
+                "code": "integration_conflict",
+                "detail": {"code": code},
+                "params": {"revision": 7},
+            },
+        )
 
     with make_client(httpx.MockTransport(handler)) as client:
         with pytest.raises(OblidogConflictError) as exc:
@@ -674,7 +740,11 @@ def test_integration_conflict_is_typed_exception_without_retry(
         assert isinstance(exc.value, OblidogApiError)
         assert exc.value.status_code == 409
         assert exc.value.code is IntegrationConflictCode(code)
-        assert json.loads(exc.value.content) == {"detail": {"code": code}}
+        assert json.loads(exc.value.content) == {
+            "code": "integration_conflict",
+            "detail": {"code": code},
+            "params": {"revision": 7},
+        }
     assert calls == 1
 
 
@@ -694,7 +764,13 @@ def test_low_level_client_parses_documented_conflict() -> None:
 
     def handler(request: httpx.Request) -> httpx.Response:
         assert_auth(request)
-        return httpx.Response(409, json={"detail": {"code": "revision_conflict"}})
+        return httpx.Response(
+            409,
+            json={
+                "code": "integration_conflict",
+                "detail": {"code": "revision_conflict"},
+            },
+        )
 
     with make_client(httpx.MockTransport(handler)) as client:
         response = integration_start_integration_run.sync_detailed(

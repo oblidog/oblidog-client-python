@@ -3,9 +3,11 @@ from __future__ import annotations
 import datetime
 import logging
 import uuid
+from collections.abc import Callable
 from typing import Any, Self
 
 from .exceptions import OblidogApiError, OblidogConflictError, OblidogValidationError
+from .generated import errors
 from .generated.api.integration import (
     integration_append_integration_obligation_note as append_note_api,
 )
@@ -64,7 +66,6 @@ from .generated.client import AuthenticatedClient
 from .generated.models.category_data_record_public import CategoryDataRecordPublic
 from .generated.models.category_data_records_public import CategoryDataRecordsPublic
 from .generated.models.category_data_schema_public import CategoryDataSchemaPublic
-from .generated.models.http_validation_error import HTTPValidationError
 from .generated.models.integration_category_data_record_create import (
     IntegrationCategoryDataRecordCreate,
 )
@@ -93,20 +94,33 @@ from .generated.models.obligation_lifecycle import ObligationLifecycle
 from .generated.models.obligation_note_append import ObligationNoteAppend
 from .generated.models.obligation_public import ObligationPublic
 from .generated.models.obligations_public import ObligationsPublic
-from .generated.types import UNSET
+from .generated.types import UNSET, Response
 from .period import ObligationPeriod
 
 logger = logging.getLogger(__name__)
 
 
-def _result(value: Any) -> Any:
-    if isinstance(value, IntegrationConflictResponse):
-        raise OblidogConflictError(value.detail.code)
-    if isinstance(value, HTTPValidationError):
-        raise OblidogValidationError(str(value.to_dict()))
-    if value is None:
-        raise OblidogApiError(0, b"API returned no parsed response")
-    return value
+def _request(operation: Callable[..., Response[Any]], *args: Any, **kwargs: Any) -> Any:
+    """Translate detailed endpoint responses into public results or SDK errors."""
+    try:
+        response = operation(*args, **kwargs)
+    except errors.UnexpectedStatus as exc:
+        raise OblidogApiError(exc.status_code, exc.content) from exc
+    if response.status_code >= 400:
+        if isinstance(response.parsed, IntegrationConflictResponse):
+            raise OblidogConflictError(
+                response.parsed.detail.code, content=response.content
+            )
+        if response.status_code == 422:
+            raise OblidogValidationError(
+                response.content.decode(errors="replace"),
+                status_code=response.status_code,
+                content=response.content,
+            )
+        raise OblidogApiError(response.status_code, response.content)
+    if response.parsed is None:
+        raise OblidogApiError(response.status_code, response.content)
+    return response.parsed
 
 
 def _period_path(period: ObligationPeriod) -> str:
@@ -147,13 +161,13 @@ class ObligationsClient:
             OblidogValidationError: If a supplied filter is invalid.
             OblidogApiError: If the API returns no parsed response.
         """
-        result = list_api.sync(
+        return _request(
+            list_api.sync_detailed,
             client=self._client,
             year=year if year is not None else UNSET,
             month=month if month is not None else UNSET,
             lifecycle=lifecycle if lifecycle is not None else UNSET,
         )
-        return _result(result)
 
     def get(self, period: ObligationPeriod) -> ObligationPublic:
         """Return one obligation for ``period`` in the key-bound category.
@@ -162,12 +176,14 @@ class ObligationsClient:
             TypeError: If ``period`` is not an :class:`ObligationPeriod`.
             OblidogApiError: If the API cannot return a parsed obligation.
         """
-        return _result(get_api.sync(_period_path(period), client=self._client))
+        return _request(
+            get_api.sync_detailed, _period_path(period), client=self._client
+        )
 
     def list_components(self, period: ObligationPeriod) -> ObligationComponentsPublic:
         """List components currently attached to an obligation."""
-        return _result(
-            list_components_api.sync(_period_path(period), client=self._client)
+        return _request(
+            list_components_api.sync_detailed, _period_path(period), client=self._client
         )
 
     def upsert_component(
@@ -204,10 +220,11 @@ class ObligationsClient:
                 else metadata
             ),
         )
-        return _result(
-            upsert_component_api.sync(
-                _period_path(period), client=self._client, body=body
-            )
+        return _request(
+            upsert_component_api.sync_detailed,
+            _period_path(period),
+            client=self._client,
+            body=body,
         )
 
     def update(
@@ -235,39 +252,51 @@ class ObligationsClient:
             due_date=due_date,
             issue_date=issue_date,
         )
-        return _result(
-            update_api.sync(_period_path(period), client=self._client, body=body)
+        return _request(
+            update_api.sync_detailed,
+            _period_path(period),
+            client=self._client,
+            body=body,
         )
 
     def append_note(self, period: ObligationPeriod, text: str) -> ObligationPublic:
         """Append ``text`` to an obligation's existing notes and return it."""
-        return _result(
-            append_note_api.sync(
-                _period_path(period),
-                client=self._client,
-                body=ObligationNoteAppend(text=text),
-            )
+        return _request(
+            append_note_api.sync_detailed,
+            _period_path(period),
+            client=self._client,
+            body=ObligationNoteAppend(text=text),
         )
 
     def mark_ready(self, period: ObligationPeriod) -> ObligationPublic:
         """Mark an obligation ready for payment."""
-        return _result(mark_ready_api.sync(_period_path(period), client=self._client))
+        return _request(
+            mark_ready_api.sync_detailed, _period_path(period), client=self._client
+        )
 
     def mark_paid(self, period: ObligationPeriod) -> ObligationPublic:
         """Mark an obligation paid."""
-        return _result(mark_paid_api.sync(_period_path(period), client=self._client))
+        return _request(
+            mark_paid_api.sync_detailed, _period_path(period), client=self._client
+        )
 
     def cancel(self, period: ObligationPeriod) -> ObligationPublic:
         """Cancel an obligation."""
-        return _result(cancel_api.sync(_period_path(period), client=self._client))
+        return _request(
+            cancel_api.sync_detailed, _period_path(period), client=self._client
+        )
 
     def reopen(self, period: ObligationPeriod) -> ObligationPublic:
         """Reopen a cancelled or completed obligation."""
-        return _result(reopen_api.sync(_period_path(period), client=self._client))
+        return _request(
+            reopen_api.sync_detailed, _period_path(period), client=self._client
+        )
 
     def mark_error(self, period: ObligationPeriod) -> ObligationPublic:
         """Mark an obligation as requiring attention after an integration error."""
-        return _result(mark_error_api.sync(_period_path(period), client=self._client))
+        return _request(
+            mark_error_api.sync_detailed, _period_path(period), client=self._client
+        )
 
 
 class CategoryDataClient:
@@ -278,7 +307,7 @@ class CategoryDataClient:
 
     def schema(self) -> CategoryDataSchemaPublic:
         """Return the active schema used to validate category observations."""
-        return _result(schema_category_data_api.sync(client=self._client))
+        return _request(schema_category_data_api.sync_detailed, client=self._client)
 
     def list(
         self,
@@ -293,19 +322,18 @@ class CategoryDataClient:
         ``from_`` and ``to`` are inclusive API filters when supplied. Omit
         either one to leave that end of the range unbounded.
         """
-        return _result(
-            list_category_data_api.sync(
-                client=self._client,
-                from_=from_ if from_ is not None else UNSET,
-                to=to if to is not None else UNSET,
-                limit=limit,
-                offset=offset,
-            )
+        return _request(
+            list_category_data_api.sync_detailed,
+            client=self._client,
+            from_=from_ if from_ is not None else UNSET,
+            to=to if to is not None else UNSET,
+            limit=limit,
+            offset=offset,
         )
 
     def latest(self) -> CategoryDataRecordPublic:
         """Return the latest category observation."""
-        return _result(latest_category_data_api.sync(client=self._client))
+        return _request(latest_category_data_api.sync_detailed, client=self._client)
 
     def create(
         self,
@@ -334,7 +362,9 @@ class CategoryDataClient:
             data=IntegrationCategoryDataRecordCreateData.from_dict(data),
             external_id=external_id,
         )
-        return _result(create_category_data_api.sync(client=self._client, body=body))
+        return _request(
+            create_category_data_api.sync_detailed, client=self._client, body=body
+        )
 
 
 class IntegrationRun:
@@ -451,7 +481,7 @@ class IntegrationsClient:
         the API key. Its current revision is used by :meth:`run` for
         optimistic locking.
         """
-        return _result(read_context_api.sync(client=self._client))
+        return _request(read_context_api.sync_detailed, client=self._client)
 
     def run(self) -> IntegrationRun:
         """Fetch context and start a run before synchronization work begins.
@@ -499,13 +529,12 @@ class IntegrationsClient:
             OblidogConflictError: If the revision is stale or a run conflicts.
             OblidogValidationError: If the request is invalid.
         """
-        return _result(
-            start_run_api.sync(
-                client=self._client,
-                body=IntegrationRunStart(
-                    run_id=run_id, expected_revision=expected_revision
-                ),
-            )
+        return _request(
+            start_run_api.sync_detailed,
+            client=self._client,
+            body=IntegrationRunStart(
+                run_id=run_id, expected_revision=expected_revision
+            ),
         )
 
     def finish(
@@ -526,16 +555,15 @@ class IntegrationsClient:
             OblidogConflictError: If the run cannot be completed in its state.
             OblidogValidationError: If the completion request is invalid.
         """
-        return _result(
-            finish_run_api.sync(
-                client=self._client,
-                body=IntegrationRunFinish(
-                    run_id=run_id,
-                    result=result,
-                    changes_detected=changes_detected,
-                    error=error,
-                ),
-            )
+        return _request(
+            finish_run_api.sync_detailed,
+            client=self._client,
+            body=IntegrationRunFinish(
+                run_id=run_id,
+                result=result,
+                changes_detected=changes_detected,
+                error=error,
+            ),
         )
 
 
@@ -550,6 +578,11 @@ class OblidogClient:
     The client is a context manager; exiting it closes the underlying HTTP
     connection pool. Its ``obligations``, ``category_data``, and
     ``integrations`` attributes expose the supported SDK operations.
+
+    HTTP errors raise public SDK exceptions: ``OblidogValidationError`` for
+    HTTP 422, ``OblidogConflictError`` for typed integration run conflicts,
+    and ``OblidogApiError`` for other errors. Exceptions preserve the original
+    ``status_code`` and response bytes in ``content``.
     """
 
     def __init__(
