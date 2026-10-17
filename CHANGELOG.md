@@ -1,4 +1,8 @@
-## Unreleased
+## v0.2.1 (2026-10-17)
+
+### Fix
+
+- update client for Ledger v0.20.2 error responses (#63)
 
 ## v0.2.0 (2026-09-18)
 
