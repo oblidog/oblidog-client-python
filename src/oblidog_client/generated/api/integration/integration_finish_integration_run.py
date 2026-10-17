@@ -5,7 +5,7 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.http_validation_error import HTTPValidationError
+from ...models.api_error_response import ApiErrorResponse
 from ...models.integration_conflict_response import IntegrationConflictResponse
 from ...models.integration_public import IntegrationPublic
 from ...models.integration_run_finish import IntegrationRunFinish
@@ -33,21 +33,56 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> HTTPValidationError | IntegrationConflictResponse | IntegrationPublic | None:
+) -> ApiErrorResponse | IntegrationConflictResponse | IntegrationPublic | None:
     if response.status_code == 200:
         response_200 = IntegrationPublic.from_dict(response.json())
 
         return response_200
+
+    if response.status_code == 400:
+        response_400 = ApiErrorResponse.from_dict(response.json())
+
+        return response_400
+
+    if response.status_code == 401:
+        response_401 = ApiErrorResponse.from_dict(response.json())
+
+        return response_401
+
+    if response.status_code == 403:
+        response_403 = ApiErrorResponse.from_dict(response.json())
+
+        return response_403
+
+    if response.status_code == 404:
+        response_404 = ApiErrorResponse.from_dict(response.json())
+
+        return response_404
 
     if response.status_code == 409:
         response_409 = IntegrationConflictResponse.from_dict(response.json())
 
         return response_409
 
+    if response.status_code == 413:
+        response_413 = ApiErrorResponse.from_dict(response.json())
+
+        return response_413
+
     if response.status_code == 422:
-        response_422 = HTTPValidationError.from_dict(response.json())
+        response_422 = ApiErrorResponse.from_dict(response.json())
 
         return response_422
+
+    if response.status_code == 500:
+        response_500 = ApiErrorResponse.from_dict(response.json())
+
+        return response_500
+
+    if response.status_code == 503:
+        response_503 = ApiErrorResponse.from_dict(response.json())
+
+        return response_503
 
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
@@ -57,7 +92,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[HTTPValidationError | IntegrationConflictResponse | IntegrationPublic]:
+) -> Response[ApiErrorResponse | IntegrationConflictResponse | IntegrationPublic]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -70,7 +105,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     body: IntegrationRunFinish,
-) -> Response[HTTPValidationError | IntegrationConflictResponse | IntegrationPublic]:
+) -> Response[ApiErrorResponse | IntegrationConflictResponse | IntegrationPublic]:
     """Finish Integration Run
 
     Args:
@@ -81,7 +116,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | IntegrationConflictResponse | IntegrationPublic]
+        Response[ApiErrorResponse | IntegrationConflictResponse | IntegrationPublic]
     """
 
     kwargs = _get_kwargs(
@@ -99,7 +134,7 @@ def sync(
     *,
     client: AuthenticatedClient,
     body: IntegrationRunFinish,
-) -> HTTPValidationError | IntegrationConflictResponse | IntegrationPublic | None:
+) -> ApiErrorResponse | IntegrationConflictResponse | IntegrationPublic | None:
     """Finish Integration Run
 
     Args:
@@ -110,7 +145,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | IntegrationConflictResponse | IntegrationPublic
+        ApiErrorResponse | IntegrationConflictResponse | IntegrationPublic
     """
 
     return sync_detailed(
@@ -123,7 +158,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     body: IntegrationRunFinish,
-) -> Response[HTTPValidationError | IntegrationConflictResponse | IntegrationPublic]:
+) -> Response[ApiErrorResponse | IntegrationConflictResponse | IntegrationPublic]:
     """Finish Integration Run
 
     Args:
@@ -134,7 +169,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | IntegrationConflictResponse | IntegrationPublic]
+        Response[ApiErrorResponse | IntegrationConflictResponse | IntegrationPublic]
     """
 
     kwargs = _get_kwargs(
@@ -150,7 +185,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     body: IntegrationRunFinish,
-) -> HTTPValidationError | IntegrationConflictResponse | IntegrationPublic | None:
+) -> ApiErrorResponse | IntegrationConflictResponse | IntegrationPublic | None:
     """Finish Integration Run
 
     Args:
@@ -161,7 +196,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | IntegrationConflictResponse | IntegrationPublic
+        ApiErrorResponse | IntegrationConflictResponse | IntegrationPublic
     """
 
     return (

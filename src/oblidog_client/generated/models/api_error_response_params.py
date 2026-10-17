@@ -6,11 +6,11 @@ from typing import Any, Self, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-T = TypeVar("T", bound="Context")
+T = TypeVar("T", bound="ApiErrorResponseParams")
 
 
 @_attrs_define
-class Context:
+class ApiErrorResponseParams:
     """ """
 
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -25,10 +25,10 @@ class Context:
     @classmethod
     def from_dict(cls, src_dict: Mapping[str, Any]) -> Self:
         d = dict(src_dict)
-        context = cls()
+        api_error_response_params = cls()
 
-        context.additional_properties = d
-        return context
+        api_error_response_params.additional_properties = d
+        return api_error_response_params
 
     @property
     def additional_keys(self) -> list[str]:
