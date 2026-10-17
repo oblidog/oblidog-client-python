@@ -1,3 +1,4 @@
 project_name_override: oblidog-client
 package_name_override: oblidog_client_generated
-use_path_prefixes_for_title_model_names: false
+# Inline schemas can share titles (for example error response "Params").
+use_path_prefixes_for_title_model_names: true
