@@ -19,12 +19,20 @@ pip install oblidog-client
 
 ## Usage
 
+Set `OBLIDOG_BASE_URL` to your server root and `OBLIDOG_API_KEY` through your
+secret store or environment. This example assumes an active category schema
+accepting `meter_reading_kwh`.
+
 ```python
 import datetime
+import os
 
 from oblidog_client import OblidogClient
 
-with OblidogClient(base_url="https://oblidog.example.com", api_key="fdg_live_...") as client:
+with OblidogClient(
+    base_url=os.environ["OBLIDOG_BASE_URL"],
+    api_key=os.environ["OBLIDOG_API_KEY"],
+) as client:
     with client.integrations.run() as run:
         client.category_data.create(
             observed_at=datetime.datetime.now(datetime.UTC),
@@ -42,8 +50,13 @@ raises.
 
 The full documentation is published at
 [oblidog.github.io/oblidog-client-python](https://oblidog.github.io/oblidog-client-python/).
-It includes a quickstart, public API reference, and supported API boundary; it
+It includes a quickstart, task-oriented guides, public API reference, and supported API boundary; it
 intentionally excludes generated endpoints and transport classes.
+
+Start with [configuration](docs/guides/configuration.md), then follow the
+[obligation import](docs/guides/obligation-import.md),
+[category observations](docs/guides/category-data.md), and
+[lifecycle and failure handling](docs/guides/lifecycle-and-errors.md) guides.
 
 ## Development
 

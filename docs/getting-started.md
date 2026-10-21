@@ -6,24 +6,36 @@ Install the package from PyPI:
 pip install oblidog-client
 ```
 
+[Configure the environment](guides/configuration.md) before running these
+examples. The quickstart assumes an existing editable September 2026 obligation
+and an active category schema accepting `meter_reading_kwh`.
+
 Every synchronization should run inside `client.integrations.run()`. The
 wrapper reads the integration context, starts a run using its current revision,
 and reports a sanitized failure if the block raises.
 
 ```python
 import datetime
+import os
 
 from oblidog_client import OblidogClient, ObligationPeriod
 
-with OblidogClient(base_url="https://oblidog.example.com", api_key="fdg_live_...") as client:
+with OblidogClient(
+    base_url=os.environ["OBLIDOG_BASE_URL"],
+    api_key=os.environ["OBLIDOG_API_KEY"],
+) as client:
     with client.integrations.run() as run:
         period = ObligationPeriod(2026, 9)
-        client.obligations.update(period, current_amount="79.00")
-        client.obligations.mark_ready(period)
+        client.obligations.update(
+            period,
+            current_amount="79.00",
+            due_date=datetime.date(2026, 9, 20),
+        )
         client.category_data.create(
             observed_at=datetime.datetime.now(datetime.UTC),
             data={"meter_reading_kwh": 1234.5},
         )
+        client.obligations.mark_ready(period)
         run.finish_success(changes_detected=True)
 ```
 
@@ -45,6 +57,8 @@ leaking an `httpx` transport exception.
 The default retry policy uses four attempts. It can be customized or disabled:
 
 ```python
+import os
+
 from oblidog_client import OblidogClient, RetryPolicy
 
 retry_policy = RetryPolicy(
@@ -55,12 +69,15 @@ retry_policy = RetryPolicy(
 )
 
 with OblidogClient(
-    base_url="https://oblidog.example.com",
-    api_key="fdg_live_...",
+    base_url=os.environ["OBLIDOG_BASE_URL"],
+    api_key=os.environ["OBLIDOG_API_KEY"],
     retry_policy=retry_policy,
 ) as client:
-    context = client.integrations.get_context()
+    context = client.integrations.context()
 ```
 
 To disable automatic retries while retaining the stable connection exception,
 pass `RetryPolicy(enabled=False)`.
+
+Continue with the [complete invoice import](guides/obligation-import.md) or
+[category observations](guides/category-data.md) recipes.
