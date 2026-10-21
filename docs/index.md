@@ -10,3 +10,10 @@ surface and is intentionally absent from this reference.
 
 Start with [installation and quickstart](getting-started.md), then use the API
 reference for the exported public symbols.
+
+For complete business workflows, follow the integration guides:
+
+- [Configure an integration](guides/configuration.md).
+- [Import an invoice into an obligation](guides/obligation-import.md).
+- [Store and read category observations](guides/category-data.md).
+- [Handle lifecycle decisions and failures](guides/lifecycle-and-errors.md).

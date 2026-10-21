@@ -32,6 +32,11 @@ markdown_extensions:
 nav:
   - Overview: index.md
   - Installation and quickstart: getting-started.md
+  - Integration guides:
+      - Configuration: guides/configuration.md
+      - Import an obligation: guides/obligation-import.md
+      - Category observations: guides/category-data.md
+      - Lifecycle and failures: guides/lifecycle-and-errors.md
   - API reference:
       - Client and runs: reference/client.md
       - Obligations: reference/obligations.md
