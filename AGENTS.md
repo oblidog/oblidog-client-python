@@ -39,7 +39,7 @@ Run the same checks expected by CI:
 uv run ruff check src tests scripts
 uv run ruff format --check src tests scripts
 uv run pytest -q
-uv run mkdocs build --strict
+uv run --group docs zensical build --strict
 python -m compileall -q src
 ```
 
