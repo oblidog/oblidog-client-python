@@ -12,6 +12,7 @@ from oblidog_client import (
     OblidogValidationError,
     ObligationLifecycle,
     ObligationPeriod,
+    PaymentExecution,
 )
 
 OBLIGATION = {
@@ -780,3 +781,73 @@ def test_low_level_client_parses_documented_conflict() -> None:
         assert response.status_code == 409
         assert isinstance(response.parsed, IntegrationConflictResponse)
         assert response.parsed.detail.code is IntegrationConflictCode.REVISION_CONFLICT
+
+
+@pytest.mark.parametrize("execution", [None, *PaymentExecution])
+@pytest.mark.parametrize("operation", ["get", "list"])
+def test_public_obligation_reads_preserve_payment_execution(
+    execution: PaymentExecution | None, operation: str
+) -> None:
+    value = execution.value if execution is not None else None
+    payload = {**OBLIGATION, "payment_execution": value}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.method == "GET"
+        assert_auth(request)
+        return httpx.Response(
+            200, json=payload if operation == "get" else {"data": [payload], "count": 1}
+        )
+
+    with make_client(httpx.MockTransport(handler)) as client:
+        result = (
+            client.obligations.get(PERIOD)
+            if operation == "get"
+            else client.obligations.list().data[0]
+        )
+    assert result.payment_execution is execution
+    assert result.to_dict()["payment_execution"] == value
+
+
+@pytest.mark.parametrize("operation", ["get", "list"])
+def test_obligation_reads_remain_compatible_with_omitted_payment_execution(
+    operation: str,
+) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert_auth(request)
+        return httpx.Response(
+            200,
+            json=OBLIGATION
+            if operation == "get"
+            else {"data": [OBLIGATION], "count": 1},
+        )
+
+    with make_client(httpx.MockTransport(handler)) as client:
+        result = (
+            client.obligations.get(PERIOD)
+            if operation == "get"
+            else client.obligations.list().data[0]
+        )
+    assert "payment_execution" not in result.to_dict()
+
+
+@pytest.mark.parametrize("execution", list(PaymentExecution))
+def test_value_updates_do_not_write_the_users_payment_plan(
+    execution: PaymentExecution,
+) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.method == "PATCH"
+        assert_auth(request)
+        assert json.loads(request.content) == {"current_amount": "450.00"}
+        return httpx.Response(
+            200,
+            json={
+                **OBLIGATION,
+                "current_amount": "450.00",
+                "payment_execution": execution.value,
+            },
+        )
+
+    with make_client(httpx.MockTransport(handler)) as client:
+        result = client.obligations.update(PERIOD, current_amount="450.00")
+    assert result.payment_execution is execution
+    assert result.current_amount == "450.00"

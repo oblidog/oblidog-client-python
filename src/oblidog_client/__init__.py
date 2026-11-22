@@ -38,6 +38,7 @@ from .generated.models.obligation_components_public import ObligationComponentsP
 from .generated.models.obligation_lifecycle import ObligationLifecycle
 from .generated.models.obligation_public import ObligationPublic
 from .generated.models.obligations_public import ObligationsPublic
+from .generated.models.payment_execution import PaymentExecution
 from .period import ObligationPeriod
 from .resilience import OblidogClient, RetryPolicy
 
@@ -72,5 +73,6 @@ __all__ = [
     "ObligationPublic",
     "ObligationsClient",
     "ObligationsPublic",
+    "PaymentExecution",
     "RetryPolicy",
 ]

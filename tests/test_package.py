@@ -35,6 +35,7 @@ EXPECTED_PUBLIC_API = {
     "OblidogConnectionError",
     "OblidogError",
     "OblidogValidationError",
+    "PaymentExecution",
     "RetryPolicy",
 }
 

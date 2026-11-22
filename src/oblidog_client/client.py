@@ -135,6 +135,11 @@ class ObligationsClient:
     All methods use the category and integration associated with the API key.
     Documented validation responses raise :class:`OblidogValidationError`; API
     conflicts raise :class:`OblidogConflictError` where supported.
+
+    Returned obligations expose ``payment_execution`` as :class:`PaymentExecution`
+    or ``None`` for manual payment. Older servers may omit the field, in which
+    case it is unset. This user-owned payment plan is read-only to integrations;
+    value updates preserve it and it is not evidence that payment occurred.
     """
 
     def __init__(self, client: AuthenticatedClient) -> None:
@@ -239,7 +244,8 @@ class ObligationsClient:
 
         For every optional value, omission leaves it unchanged; explicit
         ``None`` clears it. This applies to ``current_amount``, ``due_date``,
-        and ``issue_date``.
+        and ``issue_date``. The user-owned ``payment_execution`` plan is not
+        accepted by this integration operation and remains unchanged.
 
         Returns:
             The updated obligation.
