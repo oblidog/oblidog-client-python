@@ -76,6 +76,7 @@ class ApiErrorResponseCode(str, Enum):
     ONBOARDING_NAME_IN_USE = "onboarding_name_in_use"
     PERMISSION_DENIED = "permission_denied"
     REQUEST_INVALID = "request_invalid"
+    REQUEST_TOO_LARGE = "request_too_large"
     REQUEST_VALIDATION_FAILED = "request_validation_failed"
     RESOURCE_NOT_FOUND = "resource_not_found"
     SERVICE_UNAVAILABLE = "service_unavailable"
