@@ -8,6 +8,7 @@ from oblidog_client import (
     OblidogConflictError,
     OblidogError,
     OblidogValidationError,
+    PaymentExecution,
 )
 
 
@@ -28,6 +29,12 @@ def main() -> None:
         raise SystemExit(
             "OblidogConflictError is not part of the public API exception hierarchy"
         )
+
+    if {item.value for item in PaymentExecution} != {
+        "scheduled_transfer",
+        "automatic_collection",
+    }:
+        raise SystemExit("PaymentExecution is missing its supported public values")
 
     client = OblidogClient(
         base_url="https://oblidog.invalid",

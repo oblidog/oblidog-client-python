@@ -23,6 +23,25 @@ Updating values does not make an obligation ready automatically. Correct an
 marking it ready. Do not automate reopening merely because an update was
 rejected: that can undo a meaningful paid or canceled decision.
 
+## Planned payments
+
+Returned obligations include the user-owned `payment_execution` plan. Use the
+public `PaymentExecution` enum to distinguish a bank-scheduled transfer from an
+automatic collection; `None` means manual payment. Older servers can omit this
+optional field. The plan belongs to the individual obligation and is not a
+category recurrence rule.
+
+Ready planned payments stay out of upcoming Needs attention and daily payment
+reminders through their due date. Once overdue, they ask the user to verify
+execution. Errors and incomplete-data review still apply. The obligation remains
+unpaid until a user or integration explicitly confirms payment; never call
+`mark_paid()` based only on the plan or the passage of its due date.
+
+Integrations can read the plan but cannot change it through `obligations.update()`.
+Continue updating only integration-controlled amount and date fields; Ledger
+preserves the plan. Owners/editors manage it in Ledger while the obligation is
+`DRAFT` or `COLLECTING_DATA`; other states must be deliberately reopened first.
+
 ## Report recognized inconsistent data
 
 Suppose your provider reconciliation has established that the total stored in
