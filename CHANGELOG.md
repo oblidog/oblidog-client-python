@@ -1,3 +1,9 @@
+## v0.3.0 (2026-11-22)
+
+### Feat
+
+- expose payment execution in the public client API (#79)
+
 ## v0.2.1 (2026-10-17)
 
 ### Fix
