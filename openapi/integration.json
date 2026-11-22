@@ -90,6 +90,7 @@
               "system_run_non_manual_tasks",
               "analytics_invalid_range",
               "service_unavailable",
+              "request_too_large",
               "request_invalid",
               "request_validation_failed",
               "internal_error"
@@ -431,6 +432,7 @@
               "system_run_non_manual_tasks",
               "analytics_invalid_range",
               "service_unavailable",
+              "request_too_large",
               "request_invalid",
               "request_validation_failed",
               "internal_error"
@@ -1369,6 +1371,16 @@
             ],
             "title": "Paid At"
           },
+          "payment_execution": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PaymentExecution"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "period": {
             "$ref": "#/components/schemas/ObligationPeriodPublic"
           },
@@ -1428,6 +1440,14 @@
         ],
         "title": "ObligationsPublic",
         "type": "object"
+      },
+      "PaymentExecution": {
+        "enum": [
+          "scheduled_transfer",
+          "automatic_collection"
+        ],
+        "title": "PaymentExecution",
+        "type": "string"
       },
       "ValueState": {
         "enum": [

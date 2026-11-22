@@ -11,7 +11,9 @@ from attrs import field as _attrs_field
 from ..models.current_value_source import CurrentValueSource
 from ..models.effective_value_source_mode import EffectiveValueSourceMode
 from ..models.obligation_lifecycle import ObligationLifecycle
+from ..models.payment_execution import PaymentExecution
 from ..models.value_state import ValueState
+from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
     from ..models.counterparty_summary_public import CounterpartySummaryPublic
@@ -50,6 +52,7 @@ class ObligationPublic:
         paid_at (datetime.datetime | None):
         period (ObligationPeriodPublic):
         updated_at (datetime.datetime):
+        payment_execution (None | PaymentExecution | Unset):
     """
 
     amount_source: CurrentValueSource
@@ -77,6 +80,7 @@ class ObligationPublic:
     paid_at: datetime.datetime | None
     period: ObligationPeriodPublic
     updated_at: datetime.datetime
+    payment_execution: None | PaymentExecution | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -155,6 +159,14 @@ class ObligationPublic:
 
         updated_at = self.updated_at.isoformat()
 
+        payment_execution: None | str | Unset
+        if isinstance(self.payment_execution, Unset):
+            payment_execution = UNSET
+        elif isinstance(self.payment_execution, PaymentExecution):
+            payment_execution = self.payment_execution.value
+        else:
+            payment_execution = self.payment_execution
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -186,6 +198,8 @@ class ObligationPublic:
                 "updated_at": updated_at,
             }
         )
+        if payment_execution is not UNSET:
+            field_dict["payment_execution"] = payment_execution
 
         return field_dict
 
@@ -327,6 +341,23 @@ class ObligationPublic:
 
         updated_at = datetime.datetime.fromisoformat(d.pop("updated_at"))
 
+        def _parse_payment_execution(data: object) -> None | PaymentExecution | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                payment_execution_type_0 = PaymentExecution(data)
+
+                return payment_execution_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(None | PaymentExecution | Unset, data)
+
+        payment_execution = _parse_payment_execution(d.pop("payment_execution", UNSET))
+
         obligation_public = cls(
             amount_source=amount_source,
             amount_state=amount_state,
@@ -353,6 +384,7 @@ class ObligationPublic:
             paid_at=paid_at,
             period=period,
             updated_at=updated_at,
+            payment_execution=payment_execution,
         )
 
         obligation_public.additional_properties = d
